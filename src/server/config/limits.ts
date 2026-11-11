@@ -9,7 +9,7 @@ export interface Limits {
     maxRedirects: number;
     maxRequestBodyBytes: number;
   };
-  workflow: { maxSteps: number };
+  workflow: { maxSteps: number; maxDurationSeconds: number };
   load: {
     maxVus: number;
     maxDurationSeconds: number;
@@ -17,7 +17,7 @@ export interface Limits {
     maxConcurrentRuns: number;
     runTtlSeconds: number;
   };
-   rateLimit: {
+  rateLimit: {
     windowSeconds: number;
     maxRequests: number;
     maxLoadRunsPerHour: number;
@@ -34,7 +34,10 @@ export function buildLimits(e: Env): Limits {
       maxRedirects: e.HTTP_MAX_REDIRECTS,
       maxRequestBodyBytes: e.HTTP_MAX_REQUEST_BODY_BYTES,
     },
-    workflow: { maxSteps: e.WORKFLOW_MAX_STEPS },
+    workflow: {
+      maxSteps: e.WORKFLOW_MAX_STEPS,
+      maxDurationSeconds: e.WORKFLOW_MAX_DURATION_SECONDS,
+    },
     load: {
       maxVus: e.LOAD_MAX_VUS,
       maxDurationSeconds: e.LOAD_MAX_DURATION_SECONDS,
@@ -42,7 +45,7 @@ export function buildLimits(e: Env): Limits {
       maxConcurrentRuns: e.LOAD_MAX_CONCURRENT_RUNS,
       runTtlSeconds: e.LOAD_RUN_TTL_SECONDS,
     },
-     rateLimit: {
+    rateLimit: {
       windowSeconds: e.RATE_LIMIT_WINDOW_SECONDS,
       maxRequests: e.RATE_LIMIT_MAX_REQUESTS,
       maxLoadRunsPerHour: e.RATE_LIMIT_LOAD_RUNS_PER_HOUR,
