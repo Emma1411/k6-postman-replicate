@@ -44,10 +44,18 @@ export function getPeakIterationsPerSecond(e: ExecutorConfig): number | null {
 }
 
 export function assertWorkflowWithinLimits(workflow: Workflow, limits: Limits): void {
+  const violations: string[] = [];
+
   if (workflow.steps.length > limits.workflow.maxSteps) {
-    throw new AppError("LIMIT_EXCEEDED", "Le workflow dépasse les limites du serveur.", {
-      violations: [`Étapes : ${workflow.steps.length} > ${limits.workflow.maxSteps}`],
-    });
+    violations.push(`Étapes : ${workflow.steps.length} > ${limits.workflow.maxSteps}`);
+  }
+  const pauseSeconds = workflow.steps.reduce((sum, s) => sum + s.thinkTimeMs, 0) / 1000;
+  if (pauseSeconds > limits.workflow.maxDurationSeconds) {
+    violations.push(`Pauses cumulées : ${pauseSeconds}s > ${limits.workflow.maxDurationSeconds}s`);
+  }
+
+  if (violations.length > 0) {
+    throw new AppError("LIMIT_EXCEEDED", "Le workflow dépasse les limites du serveur.", { violations });
   }
 }
 

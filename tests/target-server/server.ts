@@ -23,14 +23,24 @@ export async function startTargetServer(): Promise<TargetServer> {
 
     if (path === "/echo") {
       res.setHeader("content-type", "application/json");
-      res.end(JSON.stringify({ method: req.method, path: req.url, headers: req.headers, body: body.toString("utf8") }));
+      res.end(
+        JSON.stringify({
+          method: req.method,
+          path: req.url,
+          headers: req.headers,
+          body: body.toString("utf8"),
+        }),
+      );
     } else if (path.startsWith("/status/")) {
       res.statusCode = Number(path.split("/")[2]);
       res.end(`status ${res.statusCode}`);
     } else if (path.startsWith("/redirect/")) {
       const n = Number(path.split("/")[2]);
       res.statusCode = code;
-      res.setHeader("location", n <= 1 ? "/echo" : `/redirect/${n - 1}?code=${code}`);
+      res.setHeader(
+        "location",
+        n <= 1 ? "/echo" : `/redirect/${n - 1}?code=${code}`,
+      );
       res.end();
     } else if (path === "/redirect-to") {
       res.statusCode = code;
@@ -59,6 +69,33 @@ export async function startTargetServer(): Promise<TargetServer> {
     } else if (path === "/cookies") {
       res.setHeader("set-cookie", ["a=1", "b=2"]);
       res.end("ok");
+    } else if (path === "/login" && req.method === "POST") {
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ token: "tok-123", user: { name: "emma" } }));
+    } else if (path === "/users" && req.method === "POST") {
+      if (req.headers.authorization !== "Bearer tok-123") {
+        res.statusCode = 401;
+        res.end('{"error":"unauthorized"}');
+        return;
+      }
+      res.statusCode = 201;
+      res.setHeader("content-type", "application/json");
+      res.end(
+        JSON.stringify({ id: 7, ...JSON.parse(body.toString("utf8") || "{}") }),
+      );
+    } else if (path === "/users/7") {
+      if (req.headers.authorization !== "Bearer tok-123") {
+        res.statusCode = 401;
+        res.end('{"error":"unauthorized"}');
+        return;
+      }
+      if (req.method === "DELETE") {
+        res.statusCode = 204;
+        res.end();
+        return;
+      }
+      res.setHeader("content-type", "application/json");
+      res.end(JSON.stringify({ id: 7, name: "emma", tags: ["a", "b"] }));
     } else {
       res.statusCode = 404;
       res.end("not found");
