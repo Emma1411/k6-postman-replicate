@@ -8,7 +8,8 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "TIMEOUT"
   | "UPSTREAM_ERROR"
-  | "INTERNAL_ERROR";
+  | "INTERNAL_ERROR"
+  | "PAYLOAD_TOO_LARGE";
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
   VALIDATION_ERROR: 400,
@@ -19,6 +20,7 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   TIMEOUT: 504,
   UPSTREAM_ERROR: 502,
   INTERNAL_ERROR: 500,
+  PAYLOAD_TOO_LARGE: 413,
 };
 
 export class AppError extends Error {

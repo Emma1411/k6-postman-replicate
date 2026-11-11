@@ -29,6 +29,7 @@ const EnvSchema = z
     RATE_LIMIT_WINDOW_SECONDS: int(60, 1, 3600),
     RATE_LIMIT_MAX_REQUESTS: int(120, 1, 100_000),
     RATE_LIMIT_LOAD_RUNS_PER_HOUR: int(10, 1, 10_000),
+    TRUSTED_PROXY_HOPS: int(1, 0, 5),
   })
   .superRefine((v, ctx) => {
     if (v.NODE_ENV === "production" && v.ALLOW_PRIVATE_NETWORKS) {

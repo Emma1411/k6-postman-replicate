@@ -17,10 +17,11 @@ export interface Limits {
     maxConcurrentRuns: number;
     runTtlSeconds: number;
   };
-  rateLimit: {
+   rateLimit: {
     windowSeconds: number;
     maxRequests: number;
     maxLoadRunsPerHour: number;
+    trustedProxyHops: number;
   };
 }
 
@@ -41,10 +42,11 @@ export function buildLimits(e: Env): Limits {
       maxConcurrentRuns: e.LOAD_MAX_CONCURRENT_RUNS,
       runTtlSeconds: e.LOAD_RUN_TTL_SECONDS,
     },
-    rateLimit: {
+     rateLimit: {
       windowSeconds: e.RATE_LIMIT_WINDOW_SECONDS,
       maxRequests: e.RATE_LIMIT_MAX_REQUESTS,
       maxLoadRunsPerHour: e.RATE_LIMIT_LOAD_RUNS_PER_HOUR,
+      trustedProxyHops: e.TRUSTED_PROXY_HOPS,
     },
   };
 }
