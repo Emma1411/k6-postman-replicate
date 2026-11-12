@@ -47,3 +47,18 @@ export function withApi<S extends z.ZodType>(
     }
   };
 }
+
+/** Variante pour les routes sans body : rate limit général puis handler. `route` reçoit le contexte Next (params). */
+export function withApiNoBody<R = unknown>(
+  handler: (ctx: ApiContext, route: R) => Promise<Response>,
+): (request: Request, route: R) => Promise<Response> {
+  return async (request, route) => {
+    try {
+      const ip = getClientIp(request.headers, limits.rateLimit.trustedProxyHops);
+      enforceRateLimit("general", ip);
+      return await handler({ ip, request }, route);
+    } catch (err) {
+      return toErrorResponse(err);
+    }
+  };
+}

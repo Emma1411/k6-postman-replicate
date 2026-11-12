@@ -54,3 +54,67 @@ export interface ThresholdResult {
   noData: boolean;
   abortOnFail: boolean;
 }
+
+export type RunState = "starting" | "running" | "stopping" | "finished";
+export type RunStatus = "passed" | "failed" | "aborted" | "error";
+
+/** État de santé du générateur de charge (pas de l'application testée). */
+export interface GeneratorStatus {
+  /** Retard maximal de la boucle d'événements des workers sur la fenêtre (percentile 99, ms). */
+  loopDelayP99Ms: number;
+  loopDelayMaxMs: number;
+  /** Vrai quand le retard est assez élevé pour fausser les latences mesurées. */
+  saturated: boolean;
+}
+
+export interface GeneratorSummary {
+  saturated: boolean;
+  saturatedWindows: number;
+  maxLoopDelayMs: number;
+  workers: number;
+}
+
+export interface LoadRunInfo {
+  runId: string;
+  name: string;
+  executorType: string;
+  workers: number;
+  plannedDurationSeconds: number;
+  /** Heure de départ (ms depuis l'epoch), null tant que le test n'a pas démarré. */
+  startedAt: number | null;
+  state: RunState;
+}
+
+export interface LoadRunResult {
+  runId: string;
+  name: string;
+  status: RunStatus;
+  abortReason: string | null;
+  error: string | null;
+  durationSeconds: number;
+  snapshot: MetricsSnapshot;
+  thresholds: ThresholdResult[];
+  thresholdsPassed: boolean;
+  generator: GeneratorSummary;
+}
+
+export type LoadEvent =
+  | {
+      type: "init";
+      run: LoadRunInfo;
+      points: WindowPoint[];
+      snapshot: MetricsSnapshot | null;
+      thresholds: ThresholdResult[];
+      generator: GeneratorStatus;
+      result: LoadRunResult | null;
+    }
+  | { type: "started"; run: LoadRunInfo }
+  | {
+      type: "window";
+      point: WindowPoint;
+      snapshot: MetricsSnapshot;
+      thresholds: ThresholdResult[];
+      generator: GeneratorStatus;
+    }
+  | { type: "stopping"; reason: string }
+  | { type: "finished"; result: LoadRunResult };

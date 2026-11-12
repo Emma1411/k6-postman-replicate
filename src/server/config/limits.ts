@@ -16,6 +16,10 @@ export interface Limits {
     maxRequestsPerSecond: number;
     maxConcurrentRuns: number;
     runTtlSeconds: number;
+    maxWorkers: number;
+    workerPath: string;
+    gracefulStopSeconds: number;
+    detachGraceSeconds: number;
   };
   rateLimit: {
     windowSeconds: number;
@@ -38,12 +42,16 @@ export function buildLimits(e: Env): Limits {
       maxSteps: e.WORKFLOW_MAX_STEPS,
       maxDurationSeconds: e.WORKFLOW_MAX_DURATION_SECONDS,
     },
-    load: {
+     load: {
       maxVus: e.LOAD_MAX_VUS,
       maxDurationSeconds: e.LOAD_MAX_DURATION_SECONDS,
       maxRequestsPerSecond: e.LOAD_MAX_RPS,
       maxConcurrentRuns: e.LOAD_MAX_CONCURRENT_RUNS,
       runTtlSeconds: e.LOAD_RUN_TTL_SECONDS,
+      maxWorkers: e.LOAD_MAX_WORKERS,
+      workerPath: e.LOAD_WORKER_PATH,
+      gracefulStopSeconds: e.LOAD_GRACEFUL_STOP_SECONDS,
+      detachGraceSeconds: e.LOAD_DETACH_GRACE_SECONDS,
     },
     rateLimit: {
       windowSeconds: e.RATE_LIMIT_WINDOW_SECONDS,

@@ -26,6 +26,11 @@ const EnvSchema = z
     LOAD_MAX_RPS: int(500, 1, 1_000_000),
     LOAD_MAX_CONCURRENT_RUNS: int(1, 1, 100),
     LOAD_RUN_TTL_SECONDS: int(900, 60, 86_400),
+    
+    LOAD_MAX_WORKERS: int(4, 1, 64),
+    LOAD_WORKER_PATH: z.string().min(1).default("dist/workers/load-worker.js"),
+    LOAD_GRACEFUL_STOP_SECONDS: int(10, 0, 120),
+    LOAD_DETACH_GRACE_SECONDS: int(30, 1, 600),
 
     RATE_LIMIT_WINDOW_SECONDS: int(60, 1, 3600),
     RATE_LIMIT_MAX_REQUESTS: int(120, 1, 100_000),

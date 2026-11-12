@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "npm run build:worker && next dev",
+    "build": "npm run build:worker && next build",
+    "build:worker": "tsup",
+    "dev:worker": "tsup --watch",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
