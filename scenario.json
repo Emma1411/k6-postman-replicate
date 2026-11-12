@@ -1,0 +1,48 @@
+{
+  "scenario": {
+    "name": "Test local",
+    "workflow": {
+      "name": "health",
+      "variables": {
+        "base": "http://localhost:3000"
+      },
+      "steps": [
+        {
+          "id": "health",
+          "name": "Santé",
+          "request": {
+            "method": "GET",
+            "url": "{{base}}/api/health"
+          },
+          "assertions": [
+            {
+              "type": "status",
+              "expected": 200
+            },
+            {
+              "type": "jsonPath",
+              "path": "$.status",
+              "operator": "equals",
+              "value": "ok"
+            }
+          ]
+        }
+      ]
+    },
+    "executor": {
+      "type": "constant-vus",
+      "vus": 5,
+      "durationSeconds": 10
+    },
+    "thresholds": [
+      {
+        "metric": "http_req_duration",
+        "expression": "p(95)<500"
+      },
+      {
+        "metric": "http_req_failed",
+        "expression": "rate<0.01"
+      }
+    ]
+  }
+}

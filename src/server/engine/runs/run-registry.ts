@@ -73,7 +73,7 @@ export function getRegistry(): RunRegistry {
     const workerFile = path.resolve(process.cwd(), appLimits.load.workerPath);
     globalStore.__runRegistry = new RunRegistry({
       limits: appLimits,
-      createWorker: () => new Worker(workerFile) as unknown as WorkerLike,
+      createWorker: () => createLoadWorker(workerFile),
       maxWorkers: Math.max(1, Math.min(appLimits.load.maxWorkers, os.availableParallelism())),
       detachGraceMs: appLimits.load.detachGraceSeconds * 1000,
       gracefulStopMs: appLimits.load.gracefulStopSeconds * 1000,
@@ -86,4 +86,8 @@ export function getRegistry(): RunRegistry {
     });
   }
   return globalStore.__runRegistry;
+}
+
+function createLoadWorker(workerFile: string): WorkerLike {
+  return new Worker(workerFile) as unknown as WorkerLike;
 }
