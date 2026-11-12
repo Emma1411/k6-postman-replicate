@@ -66,6 +66,7 @@ export const LOAD_METRICS = [
   "http_reqs",
   "iterations",
   "iteration_duration",
+  "dropped_iterations",
   "checks",
   "vus",
   "data_sent",

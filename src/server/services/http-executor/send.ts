@@ -37,7 +37,7 @@ export interface HopResult {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
-function mapNetworkError(err: unknown): AppError {
+export function mapNetworkError(err: unknown): AppError {
   if (err instanceof AppError) return err;
   const code = (err as NodeJS.ErrnoException | undefined)?.code;
   const message = (err as Error | undefined)?.message ?? "erreur inconnue";
@@ -104,7 +104,7 @@ function pairHeaders(raw: string[]): Array<{ key: string; value: string }> {
   return out;
 }
 
-function createDecoder(encoding: string): Transform | null {
+export function createDecoder(encoding: string): Transform | null {
   switch (encoding) {
     case "gzip":
     case "x-gzip":
@@ -119,7 +119,7 @@ function createDecoder(encoding: string): Transform | null {
 }
 
 /** Lit le flux en comptant les octets décodés : protège aussi des bombes de décompression. */
-async function collect(
+export async function collect(
   stream: Readable,
   maxBytes: number,
 ): Promise<{ body: Buffer; truncated: boolean }> {

@@ -26,7 +26,7 @@ function redirectedMethod(status: number, method: string): string {
   return method;
 }
 
-function decodeBody(body: Buffer, truncated: boolean): HttpResponse["body"] {
+export function decodeBody(body: Buffer, truncated: boolean): HttpResponse["body"] {
   if (body.length === 0) return { encoding: "utf8", content: "", truncated };
   if (!body.includes(0)) {
     try {

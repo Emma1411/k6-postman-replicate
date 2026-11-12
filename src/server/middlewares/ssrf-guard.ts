@@ -370,4 +370,74 @@ export function createPinnedLookup(
       callback(null, address, family);
     }
   };
+
+  
+}
+
+/**
+ * Contrôle synchrone d'une URL avant envoi (protocole, identifiants, nom d'hôte interdit, IP littérale).
+ * Les noms de domaine sont contrôlés plus tard, au moment de la connexion, par createGuardedLookup.
+ */
+export function assertUrlAllowed(rawUrl: string, limits: Pick<Limits, "network">): URL {
+  let url: URL;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    throw new AppError("VALIDATION_ERROR", "URL invalide.");
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") {
+    throw new AppError("VALIDATION_ERROR", "Seuls les protocoles http et https sont autorisés.");
+  }
+  if (url.username || url.password) {
+    throw new AppError(
+      "VALIDATION_ERROR",
+      "Les identifiants dans l'URL sont interdits : utilise la section Authentification.",
+    );
+  }
+
+  const hostname = url.hostname
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "")
+    .replace(/\.$/, "");
+  if (!hostname) throw new AppError("VALIDATION_ERROR", "URL invalide : hôte manquant.");
+
+  if (!limits.network.allowPrivateNetworks) {
+    if (isBlockedHostname(hostname)) throw ssrfBlocked(hostname);
+    if (isIP(hostname) !== 0 && isBlockedAddress(hostname)) throw ssrfBlocked(hostname);
+  }
+  return url;
+}
+
+/**
+ * Fonction `lookup` qui résout elle-même le nom et refuse toute adresse privée.
+ * Branchée sur l'agent HTTP, elle contrôle chaque connexion réellement ouverte :
+ * aucun écart possible entre la vérification et la connexion (DNS rebinding).
+ */
+export function createGuardedLookup(limits: Pick<Limits, "network">) {
+  const allowPrivate = limits.network.allowPrivateNetworks;
+
+  return function guardedLookup(
+    hostname: string,
+    optionsOrCallback: dns.LookupOptions | LookupCallback,
+    maybeCallback?: LookupCallback,
+  ): void {
+    const callback = typeof optionsOrCallback === "function" ? optionsOrCallback : maybeCallback;
+    const options = typeof optionsOrCallback === "function" ? {} : optionsOrCallback;
+    if (!callback) throw new TypeError("Callback manquant.");
+
+    const lookupOptions: dns.LookupAllOptions = { all: true, verbatim: true };
+    if (options.family === 4 || options.family === 6) lookupOptions.family = options.family;
+
+    dns.lookup(hostname, lookupOptions, (err, addresses) => {
+      if (err) return callback(err, "");
+      if (!allowPrivate && addresses.some((a) => isBlockedAddress(a.address))) {
+        const blocked = Object.assign(new Error("Destination non autorisée"), {
+          code: "ESSRFBLOCKED",
+        }) as NodeJS.ErrnoException;
+        return callback(blocked, "");
+      }
+      if (options.all) return callback(null, addresses);
+      callback(null, addresses[0].address, addresses[0].family);
+    });
+  };
 }

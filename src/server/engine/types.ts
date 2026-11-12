@@ -15,6 +15,8 @@ export interface StepResponse {
 export interface TransportContext {
   /** Temps restant avant l'échéance globale, null si aucune. */
   timeoutMs: number | null;
+  /** Faux si aucune assertion ni extraction ne lit le body : le transport peut alors seulement le vider. */
+  needsBody: boolean;
 }
 
 /**

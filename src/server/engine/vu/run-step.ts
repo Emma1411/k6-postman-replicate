@@ -22,15 +22,36 @@ const PREVIEW_CHARS = 1024;
 function toError(err: unknown): { code: string; message: string } {
   if (err instanceof AppError) return { code: err.code, message: err.message };
   console.error("[engine] erreur inattendue", err);
-  return { code: "INTERNAL_ERROR", message: "Erreur inattendue pendant l'exécution de l'étape." };
+  return {
+    code: "INTERNAL_ERROR",
+    message: "Erreur inattendue pendant l'exécution de l'étape.",
+  };
 }
 
-export async function runStep(step: WorkflowStep, ctx: RunStepContext): Promise<StepResult> {
-  const variables: Variables = { ...ctx.variables, ...dynamicVariables(ctx.vu, ctx.iteration) };
+const BODY_ASSERTIONS = new Set(["jsonPath", "bodyContains", "jsonSchema"]);
+
+function needsBody(step: WorkflowStep): boolean {
+  return (
+    step.assertions.some((a) => BODY_ASSERTIONS.has(a.type)) ||
+    step.extract.some((e) => e.from === "jsonPath" || e.from === "regex")
+  );
+}
+
+export async function runStep(
+  step: WorkflowStep,
+  ctx: RunStepContext,
+): Promise<StepResult> {
+  const variables: Variables = {
+    ...ctx.variables,
+    ...dynamicVariables(ctx.vu, ctx.iteration),
+  };
 
   let response: StepResponse;
   try {
-    response = await ctx.transport(step.request, variables, { timeoutMs: ctx.remainingMs });
+    response = await ctx.transport(step.request, variables, {
+      timeoutMs: ctx.remainingMs,
+      needsBody: needsBody(step),
+    });
   } catch (err) {
     return {
       stepId: step.id,
@@ -46,9 +67,12 @@ export async function runStep(step: WorkflowStep, ctx: RunStepContext): Promise<
   }
 
   const view = new ResponseView(response);
-  const assertions = step.assertions.map((assertion) => evaluateAssertion(assertion, view, variables));
+  const assertions = step.assertions.map((assertion) =>
+    evaluateAssertion(assertion, view, variables),
+  );
   const extraction = applyExtractors(step.extract, view);
-  const failed = extraction.errors.length > 0 || assertions.some((a) => !a.passed);
+  const failed =
+    extraction.errors.length > 0 || assertions.some((a) => !a.passed);
 
   return {
     stepId: step.id,
@@ -61,7 +85,10 @@ export async function runStep(step: WorkflowStep, ctx: RunStepContext): Promise<
       sizeBytes: response.bodyBytes,
       finalUrl: response.finalUrl,
       truncated: response.truncated,
-      preview: ctx.includePreview && response.bodyText !== null ? response.bodyText.slice(0, PREVIEW_CHARS) : null,
+      preview:
+        ctx.includePreview && response.bodyText !== null
+          ? response.bodyText.slice(0, PREVIEW_CHARS)
+          : null,
     },
     assertions,
     extracted: extraction.values,
