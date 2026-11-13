@@ -1,0 +1,25 @@
+{
+  "info": {
+    "name": "Démo",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Santé",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{base}}/api/health?x=1" }
+      }
+    },
+    {
+      "name": "Copie",
+      "request": {
+        "method": "COPY",
+        "url": "{{base}}/x"
+      }
+    }
+  ]
+}

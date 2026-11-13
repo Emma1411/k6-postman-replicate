@@ -27,6 +27,8 @@ export interface Limits {
     maxLoadRunsPerHour: number;
     trustedProxyHops: number;
   };
+  prometheus: { allowedHosts: string[]; timeoutMs: number };
+
 }
 
 export function buildLimits(e: Env): Limits {
@@ -58,6 +60,12 @@ export function buildLimits(e: Env): Limits {
       maxRequests: e.RATE_LIMIT_MAX_REQUESTS,
       maxLoadRunsPerHour: e.RATE_LIMIT_LOAD_RUNS_PER_HOUR,
       trustedProxyHops: e.TRUSTED_PROXY_HOPS,
+    },
+    prometheus: {
+      allowedHosts: e.PROMETHEUS_ALLOWED_HOSTS.split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean),
+      timeoutMs: e.PROMETHEUS_TIMEOUT_MS,
     },
   };
 }

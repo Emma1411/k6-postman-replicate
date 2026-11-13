@@ -31904,7 +31904,7 @@ var AppError = class extends Error {
   }
 };
 
-// src/server/engine/vu/jsonpath.ts
+// src/shared/jsonpath.ts
 var JsonPathError = class extends Error {
   constructor(message) {
     super(message);

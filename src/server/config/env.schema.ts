@@ -10,7 +10,9 @@ const bool = z
 
 const EnvSchema = z
   .object({
-    NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+    NODE_ENV: z
+      .enum(["development", "test", "production"])
+      .default("development"),
     ALLOW_PRIVATE_NETWORKS: bool,
 
     HTTP_MAX_TIMEOUT_MS: int(30_000, 100, 120_000),
@@ -26,11 +28,13 @@ const EnvSchema = z
     LOAD_MAX_RPS: int(500, 1, 1_000_000),
     LOAD_MAX_CONCURRENT_RUNS: int(1, 1, 100),
     LOAD_RUN_TTL_SECONDS: int(900, 60, 86_400),
-    
+
     LOAD_MAX_WORKERS: int(4, 1, 64),
     LOAD_WORKER_PATH: z.string().min(1).default("dist/workers/load-worker.js"),
     LOAD_GRACEFUL_STOP_SECONDS: int(10, 0, 120),
     LOAD_DETACH_GRACE_SECONDS: int(30, 1, 600),
+    PROMETHEUS_ALLOWED_HOSTS: z.string().default(""),
+    PROMETHEUS_TIMEOUT_MS: int(15_000, 1000, 120_000),
 
     RATE_LIMIT_WINDOW_SECONDS: int(60, 1, 3600),
     RATE_LIMIT_MAX_REQUESTS: int(120, 1, 100_000),
@@ -45,6 +49,18 @@ const EnvSchema = z
         message: "ALLOW_PRIVATE_NETWORKS=true est interdit en production.",
       });
     }
+    const hostEntry = /^(\[[0-9a-fA-F:]+\]|[A-Za-z0-9._-]+)(:\d{1,5})?$/;
+    for (const entry of v.PROMETHEUS_ALLOWED_HOSTS.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)) {
+      if (!hostEntry.test(entry)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["PROMETHEUS_ALLOWED_HOSTS"],
+          message: `Entrée invalide : « ${entry} » (attendu : hôte ou hôte:port).`,
+        });
+      }
+    }
   });
 
 export type Env = z.infer<typeof EnvSchema>;
@@ -52,7 +68,9 @@ export type Env = z.infer<typeof EnvSchema>;
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const result = EnvSchema.safeParse(source);
   if (!result.success) {
-    const lines = result.error.issues.map((i) => `  - ${i.path.join(".") || "(racine)"}: ${i.message}`);
+    const lines = result.error.issues.map(
+      (i) => `  - ${i.path.join(".") || "(racine)"}: ${i.message}`,
+    );
     throw new Error(`Configuration invalide :\n${lines.join("\n")}`);
   }
   return result.data;
