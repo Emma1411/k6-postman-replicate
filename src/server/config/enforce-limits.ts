@@ -91,3 +91,25 @@ export function assertScenarioWithinLimits(scenario: LoadScenario, limits: Limit
     throw new AppError("LIMIT_EXCEEDED", "Le scénario dépasse les limites du serveur.", { violations });
   }
 }
+
+/** Vérifie un executor (sans workflow) contre les limites du serveur ; renvoie la liste des dépassements. */
+export function checkExecutorAgainstLimits(executor: ExecutorConfig, requestsPerIteration: number, limits: Limits): string[] {
+  const violations: string[] = [];
+
+  const vus = getPeakVus(executor);
+  if (vus > limits.load.maxVus) violations.push(`VUs : ${vus} > ${limits.load.maxVus}`);
+
+  const duration = getTotalDurationSeconds(executor);
+  if (duration > limits.load.maxDurationSeconds) {
+    violations.push(`Durée : ${duration}s > ${limits.load.maxDurationSeconds}s`);
+  }
+
+  const iterationRate = getPeakIterationsPerSecond(executor);
+  if (iterationRate !== null) {
+    const rps = Math.round(iterationRate * requestsPerIteration * 10) / 10;
+    if (rps > limits.load.maxRequestsPerSecond) {
+      violations.push(`Débit : ${rps} req/s > ${limits.load.maxRequestsPerSecond} req/s`);
+    }
+  }
+  return violations;
+}
