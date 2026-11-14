@@ -1,0 +1,31 @@
+
+openapi: 3.0.3
+info:
+  title: Démo
+  version: "1"
+
+servers:
+  - url: http://localhost:3000
+
+tags:
+  - name: système
+
+paths:
+  /api/health:
+    get:
+      tags: [système]
+      summary: Santé
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, time]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  time:
+                    type: string

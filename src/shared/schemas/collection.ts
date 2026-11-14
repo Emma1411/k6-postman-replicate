@@ -17,6 +17,8 @@ export class CollectionError extends Error {
   }
 }
 
+
+
 export const newId = (): string => globalThis.crypto.randomUUID();
 
 export const ItemIdSchema = z
@@ -108,8 +110,8 @@ export const EnvironmentSchema = z.object({
 export type Environment = z.output<typeof EnvironmentSchema>;
 
 export const ImportInputSchema = z.object({
-  source: z.enum(["postman-collection", "postman-environment"]),
-  /** Le contenu du fichier : texte JSON, ou objet déjà analysé. */
+  source: z.enum(["postman-collection", "postman-environment", "openapi"]),
+  /** Le contenu du fichier : texte (JSON ou, pour OpenAPI, YAML), ou objet déjà analysé. */
   content: z.union([z.string().min(2), z.record(z.string(), z.unknown())]),
 });
 export type ImportInput = z.output<typeof ImportInputSchema>;

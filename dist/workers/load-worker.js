@@ -32153,22 +32153,38 @@ function validateJsonSchema(value, schema, maxIssues = 10) {
 // src/server/engine/vu/safe-regex.ts
 var import_node_vm = __toESM(require("vm"));
 var MAX_INPUT_CHARS = 2e5;
-var TIMEOUT_MS = 50;
+var TIMEOUT_MS = 100;
 var context = import_node_vm.default.createContext({ pattern: "", text: "" });
 var script = new import_node_vm.default.Script(
   "JSON.stringify((() => { const m = new RegExp(pattern).exec(text); return m ? Array.from(m) : null; })())"
 );
+context.pattern = "a";
+context.text = "a";
+script.runInContext(context);
+context.pattern = "";
+context.text = "";
 function safeRegexExec(pattern, text) {
   context.pattern = pattern;
   context.text = text.length > MAX_INPUT_CHARS ? text.slice(0, MAX_INPUT_CHARS) : text;
   try {
-    const out = script.runInContext(context, { timeout: TIMEOUT_MS });
-    return { ok: true, match: JSON.parse(out) };
+    const out = script.runInContext(context, {
+      timeout: TIMEOUT_MS
+    });
+    return {
+      ok: true,
+      match: JSON.parse(out)
+    };
   } catch (err) {
     if (err.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
-      return { ok: false, error: `Expression r\xE9guli\xE8re trop lente (plus de ${TIMEOUT_MS} ms) : motif rejet\xE9.` };
+      return {
+        ok: false,
+        error: `Expression r\xE9guli\xE8re trop lente (plus de ${TIMEOUT_MS} ms) : motif rejet\xE9.`
+      };
     }
-    return { ok: false, error: `Expression r\xE9guli\xE8re invalide : ${err.message}` };
+    return {
+      ok: false,
+      error: `Expression r\xE9guli\xE8re invalide : ${err.message}`
+    };
   }
 }
 
