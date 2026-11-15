@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      # Les tests d'intégration du moteur de charge utilisent le vrai bundle du worker.
+      - run: npm run build:worker
+      - run: npm test
+      - run: npm run build
+
+  docker:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construire l'image
+        run: docker build -t api-eng-platform:ci --build-arg APP_VERSION=${{ github.sha }} .
+      - name: Démarrer et vérifier la santé
+        run: |
+          docker run -d --name app -p 8080:8080 api-eng-platform:ci
+          for i in $(seq 1 30); do
+            curl -fsS http://127.0.0.1:8080/api/health && exit 0
+            sleep 2
+          done
+          docker logs app
+          exit 1
+      - name: Le worker de charge est présent dans l'image
+        run: curl -fsS http://127.0.0.1:8080/api/config | grep -q '"loadTests":true'
+
+  audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true   # informatif : un avis sur une dépendance ne doit pas bloquer une PR
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high

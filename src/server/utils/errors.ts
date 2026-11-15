@@ -9,6 +9,9 @@ export type ErrorCode =
   | "TIMEOUT"
   | "UPSTREAM_ERROR"
   | "INTERNAL_ERROR"
+  | "CHALLENGE_REQUIRED" // pas de laissez-passer valide : le client doit afficher le défi
+  | "CHALLENGE_FAILED" // le défi a été refusé par Cloudflare
+  | "ORIGIN_NOT_ALLOWED" // requête venant d'un autre site (navigateur)
   | "PAYLOAD_TOO_LARGE";
 
 const HTTP_STATUS: Record<ErrorCode, number> = {
@@ -20,6 +23,11 @@ const HTTP_STATUS: Record<ErrorCode, number> = {
   TIMEOUT: 504,
   UPSTREAM_ERROR: 502,
   INTERNAL_ERROR: 500,
+
+  CHALLENGE_REQUIRED: 403,
+  CHALLENGE_FAILED: 403,
+  ORIGIN_NOT_ALLOWED: 403,
+
   PAYLOAD_TOO_LARGE: 413,
 };
 
@@ -39,6 +47,8 @@ export class AppError extends Error {
   }
 
   toJSON() {
-    return { error: { code: this.code, message: this.message, details: this.details } };
+    return {
+      error: { code: this.code, message: this.message, details: this.details },
+    };
   }
 }

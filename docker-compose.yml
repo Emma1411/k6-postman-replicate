@@ -1,0 +1,47 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-local}
+    image: api-engineering-platform:local
+    # Accessible uniquement depuis ta machine. Ne change pas 127.0.0.1 sans lire docs/security.md.
+    ports:
+      - "127.0.0.1:3000:8080"
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-private}
+      # Mets true dans .env pour tester des API internes (réseau local, autres conteneurs).
+      ALLOW_PRIVATE_NETWORKS: ${ALLOW_PRIVATE_NETWORKS:-false}
+      PROMETHEUS_ALLOWED_HOSTS: ${PROMETHEUS_ALLOWED_HOSTS:-}
+      LOAD_MAX_WORKERS: ${LOAD_MAX_WORKERS:-2}
+      LOAD_MAX_VUS: ${LOAD_MAX_VUS:-200}
+      LOAD_MAX_DURATION_SECONDS: ${LOAD_MAX_DURATION_SECONDS:-300}
+      LOAD_MAX_RPS: ${LOAD_MAX_RPS:-1000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-600}
+      TRUSTED_PROXY_HOPS: ${TRUSTED_PROXY_HOPS:-0}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      BOT_PROTECTION: ${BOT_PROTECTION:-off}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      BOT_TOKEN_SECRET: ${BOT_TOKEN_SECRET:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /app/.next/cache
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    cpus: 1.5
+    restart: unless-stopped
+
+  # Optionnel : docker compose --profile monitoring up --build
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:latest   # épingle une version précise pour un usage durable
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"

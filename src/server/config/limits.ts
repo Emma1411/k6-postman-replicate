@@ -28,7 +28,7 @@ export interface Limits {
     trustedProxyHops: number;
   };
   prometheus: { allowedHosts: string[]; timeoutMs: number };
-
+  deployment: { mode: "public" | "private" };
 }
 
 export function buildLimits(e: Env): Limits {
@@ -44,7 +44,7 @@ export function buildLimits(e: Env): Limits {
       maxSteps: e.WORKFLOW_MAX_STEPS,
       maxDurationSeconds: e.WORKFLOW_MAX_DURATION_SECONDS,
     },
-     load: {
+    load: {
       maxVus: e.LOAD_MAX_VUS,
       maxDurationSeconds: e.LOAD_MAX_DURATION_SECONDS,
       maxRequestsPerSecond: e.LOAD_MAX_RPS,
@@ -67,5 +67,6 @@ export function buildLimits(e: Env): Limits {
         .filter(Boolean),
       timeoutMs: e.PROMETHEUS_TIMEOUT_MS,
     },
+    deployment: { mode: e.DEPLOYMENT_MODE },
   };
 }

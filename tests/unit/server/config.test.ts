@@ -34,3 +34,51 @@ describe("buildLimits", () => {
     expect(limits.network.allowPrivateNetworks).toBe(false);
   });
 });
+
+describe("DEPLOYMENT_MODE", () => {
+  it("est public par défaut", () => {
+    expect(parseEnv({}).DEPLOYMENT_MODE).toBe("public");
+  });
+
+  it("refuse les réseaux privés en production en mode public", () => {
+    expect(() =>
+      parseEnv({ NODE_ENV: "production", ALLOW_PRIVATE_NETWORKS: "true" }),
+    ).toThrow(/mode public/);
+  });
+
+  it("autorise les réseaux privés en production en mode private", () => {
+    const env = parseEnv({
+      NODE_ENV: "production",
+      DEPLOYMENT_MODE: "private",
+      ALLOW_PRIVATE_NETWORKS: "true",
+    });
+    expect(env.ALLOW_PRIVATE_NETWORKS).toBe(true);
+  });
+
+  it("rejette un mode inconnu", () => {
+    expect(() => parseEnv({ DEPLOYMENT_MODE: "internal" })).toThrow();
+  });
+});
+
+describe("protection anti-robot", () => {
+  it("exige les clés quand BOT_PROTECTION=turnstile", () => {
+    expect(() => parseEnv({ BOT_PROTECTION: "turnstile" })).toThrow(/TURNSTILE_SITE_KEY/);
+  });
+
+  it("refuse un secret de jeton trop court", () => {
+    expect(() =>
+      parseEnv({
+        BOT_PROTECTION: "turnstile",
+        TURNSTILE_SITE_KEY: "site",
+        TURNSTILE_SECRET_KEY: "secret",
+        BOT_TOKEN_SECRET: "court",
+      }),
+    ).toThrow();
+  });
+
+  it("traite les chaînes vides (docker compose) comme non définies", () => {
+    const env = parseEnv({ TURNSTILE_SECRET_KEY: "", BOT_TOKEN_SECRET: "", ALLOWED_ORIGINS: "" });
+    expect(env.BOT_PROTECTION).toBe("off");
+    expect(env.ALLOWED_ORIGINS).toEqual([]);
+  });
+});

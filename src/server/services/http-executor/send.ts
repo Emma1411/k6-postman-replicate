@@ -97,6 +97,7 @@ export function mapNetworkError(err: unknown): AppError {
   });
 }
 
+
 function pairHeaders(raw: string[]): Array<{ key: string; value: string }> {
   const out: Array<{ key: string; value: string }> = [];
   for (let i = 0; i + 1 < raw.length; i += 2)

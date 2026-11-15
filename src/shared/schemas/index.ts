@@ -18,3 +18,4 @@ export * from "./advisor";
 export * from "./infrastructure";
 export * from "./collection";
 export * from "./reports";
+export * from "./bot";

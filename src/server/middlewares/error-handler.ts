@@ -1,5 +1,7 @@
 import "server-only";
 import { AppError } from "@/server/utils/errors";
+import { logger } from "@/server/utils/logger";
+
 
 export function toErrorResponse(err: unknown): Response {
   if (err instanceof AppError) {
@@ -11,6 +13,6 @@ export function toErrorResponse(err: unknown): Response {
     return Response.json(err.toJSON(), { status: err.status, headers });
   }
 
-  console.error("[api] erreur inattendue", err);
+  logger.error("Erreur inattendue pendant le traitement d'une requête", { err });
   return Response.json(new AppError("INTERNAL_ERROR", "Erreur interne du serveur.").toJSON(), { status: 500 });
 }

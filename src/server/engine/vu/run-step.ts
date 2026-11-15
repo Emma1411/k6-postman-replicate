@@ -7,6 +7,8 @@ import { evaluateAssertion } from "./assertions";
 import { dynamicVariables } from "./dynamic-variables";
 import { applyExtractors } from "./extractors";
 import { ResponseView } from "./response-view";
+import { logger } from "@/server/utils/logger";
+
 
 export interface RunStepContext {
   transport: StepTransport;
@@ -21,7 +23,7 @@ const PREVIEW_CHARS = 1024;
 
 function toError(err: unknown): { code: string; message: string } {
   if (err instanceof AppError) return { code: err.code, message: err.message };
-  console.error("[engine] erreur inattendue", err);
+  logger.error("Erreur inattendue pendant l'exécution d'une étape", { err });
   return {
     code: "INTERNAL_ERROR",
     message: "Erreur inattendue pendant l'exécution de l'étape.",

@@ -1,0 +1,16 @@
+node_modules
+.next
+dist
+.git
+.github
+.env
+.env.*
+!.env.example
+docs
+*.md
+!README.md
+coverage
+npm-debug.log*
+# Les tests ne sont pas dans l'image, sauf le stub utilisé par tsup pour le bundle du worker.
+tests/*
+!tests/stubs

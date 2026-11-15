@@ -5926,10 +5926,10 @@ var require_simd = __commonJS({
     );
     var textEncoder = new TextEncoder();
     var textDecoder = new TextDecoder();
-    function log(logger, raw) {
+    function log2(logger2, raw) {
       const len = Number(BigInt.asUintN(32, raw));
       const ptr = Number(raw >> 32n);
-      logger(textDecoder.decode(new Uint8Array(this.memory.buffer, ptr, len)));
+      logger2(textDecoder.decode(new Uint8Array(this.memory.buffer, ptr, len)));
     }
     function alloc(len) {
       return this.alloc(len) >>> 0;
@@ -6515,17 +6515,17 @@ var require_simd = __commonJS({
     }
     function setup(env = {}) {
       let { logger: logOption, ...instanceEnvironment } = env;
-      let logger = noop;
+      let logger2 = noop;
       const context2 = {};
       if (logOption) {
         if (typeof logOption !== "function") {
           logOption = console.log;
         }
-        logger = log.bind(context2, logOption);
+        logger2 = log2.bind(context2, logOption);
       }
       const instance = new WebAssembly.Instance(wasmModule, {
         env: {
-          logger,
+          logger: logger2,
           on_error: noop,
           on_finish: noop,
           on_message_start: noop,
@@ -6859,10 +6859,10 @@ var require_no_simd = __commonJS({
     );
     var textEncoder = new TextEncoder();
     var textDecoder = new TextDecoder();
-    function log(logger, raw) {
+    function log2(logger2, raw) {
       const len = Number(BigInt.asUintN(32, raw));
       const ptr = Number(raw >> 32n);
-      logger(textDecoder.decode(new Uint8Array(this.memory.buffer, ptr, len)));
+      logger2(textDecoder.decode(new Uint8Array(this.memory.buffer, ptr, len)));
     }
     function alloc(len) {
       return this.alloc(len) >>> 0;
@@ -7448,17 +7448,17 @@ var require_no_simd = __commonJS({
     }
     function setup(env = {}) {
       let { logger: logOption, ...instanceEnvironment } = env;
-      let logger = noop;
+      let logger2 = noop;
       const context2 = {};
       if (logOption) {
         if (typeof logOption !== "function") {
           logOption = console.log;
         }
-        logger = log.bind(context2, logOption);
+        logger2 = log2.bind(context2, logOption);
       }
       const instance = new WebAssembly.Instance(wasmModule, {
         env: {
-          logger,
+          logger: logger2,
           on_error: noop,
           on_finish: noop,
           on_message_start: noop,
@@ -17684,13 +17684,13 @@ var require_mock_call_history = __commonJS({
     function makeFilterCalls(parameterName) {
       return (parameterValue, logs = this.logs) => {
         if (typeof parameterValue === "string" || parameterValue == null) {
-          return logs.filter((log) => {
-            return log[parameterName] === parameterValue;
+          return logs.filter((log2) => {
+            return log2[parameterName] === parameterValue;
           });
         }
         if (parameterValue instanceof RegExp) {
-          return logs.filter((log) => {
-            return parameterValue.test(log[parameterName]);
+          return logs.filter((log2) => {
+            return parameterValue.test(log2[parameterName]);
           });
         }
         throw new InvalidArgumentError(`${parameterName} parameter should be one of string, regexp, undefined or null`);
@@ -17785,8 +17785,8 @@ var require_mock_call_history = __commonJS({
           return this.logs.filter(criteria);
         }
         if (criteria instanceof RegExp) {
-          return this.logs.filter((log) => {
-            return criteria.test(log.toString());
+          return this.logs.filter((log2) => {
+            return criteria.test(log2.toString());
           });
         }
         if (typeof criteria === "object" && criteria !== null) {
@@ -17836,13 +17836,13 @@ var require_mock_call_history = __commonJS({
         this.logs = [];
       }
       [kMockCallHistoryAddLog](requestInit) {
-        const log = new MockCallHistoryLog(requestInit);
-        this.logs.push(log);
-        return log;
+        const log2 = new MockCallHistoryLog(requestInit);
+        this.logs.push(log2);
+        return log2;
       }
       *[Symbol.iterator]() {
-        for (const log of this.calls()) {
-          yield log;
+        for (const log2 of this.calls()) {
+          yield log2;
         }
       }
     };
@@ -22289,8 +22289,8 @@ var require_cache2 = __commonJS({
       }
       if (cacheControlDirectives?.["min-fresh"]) {
         const timeLeftTillStale = result.staleAt - now;
-        const threshold = cacheControlDirectives["min-fresh"] * 1e3;
-        return timeLeftTillStale <= threshold;
+        const threshold2 = cacheControlDirectives["min-fresh"] * 1e3;
+        return timeLeftTillStale <= threshold2;
       }
       return false;
     }
@@ -31887,6 +31887,9 @@ var HTTP_STATUS = {
   TIMEOUT: 504,
   UPSTREAM_ERROR: 502,
   INTERNAL_ERROR: 500,
+  CHALLENGE_REQUIRED: 403,
+  CHALLENGE_FAILED: 403,
+  ORIGIN_NOT_ALLOWED: 403,
   PAYLOAD_TOO_LARGE: 413
 };
 var AppError = class extends Error {
@@ -31900,7 +31903,9 @@ var AppError = class extends Error {
     return HTTP_STATUS[this.code];
   }
   toJSON() {
-    return { error: { code: this.code, message: this.message, details: this.details } };
+    return {
+      error: { code: this.code, message: this.message, details: this.details }
+    };
   }
 };
 
@@ -32457,11 +32462,73 @@ var ResponseView = class {
   }
 };
 
+// src/shared/reports/redaction.ts
+var MASK2 = "\u2022\u2022\u2022\u2022\u2022\u2022";
+function redactText(text) {
+  return text.replace(/\b(Bearer|Basic)\s+[A-Za-z0-9._~+/=-]{8,}/gi, `$1 ${MASK2}`).replace(/\beyJ[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]{5,}\.[A-Za-z0-9_-]*/g, MASK2).replace(
+    /("?[A-Za-z0-9_-]*(?:token|secret|passw(?:or)?d|api[-_]?key)[A-Za-z0-9_-]*"?\s*[:=]\s*)("[^"]*"|[^\s,;&}\]]+)/gi,
+    (_match, head, value) => `${head}${value.startsWith('"') ? `"${MASK2}"` : MASK2}`
+  );
+}
+
+// src/server/utils/logger.ts
+var ORDER = { debug: 10, info: 20, warn: 30, error: 40 };
+var SEVERITY = {
+  debug: "DEBUG",
+  info: "INFO",
+  warn: "WARNING",
+  error: "ERROR"
+};
+var stdoutSink = (line) => {
+  process.stdout.write(`${line}
+`);
+};
+var sink = stdoutSink;
+function threshold() {
+  const raw = process.env.LOG_LEVEL;
+  return raw && ORDER[raw] || ORDER.info;
+}
+function describeError(err) {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: redactText(err.message),
+      stack: err.stack ? redactText(err.stack) : void 0
+    };
+  }
+  return { message: redactText(String(err)) };
+}
+function serializeFields(fields) {
+  const out = {};
+  for (const [key, value] of Object.entries(fields)) {
+    if (key === "err" || key === "error") out.error = describeError(value);
+    else out[key] = typeof value === "string" ? redactText(value) : value;
+  }
+  return out;
+}
+function log(level, message, fields = {}) {
+  if (ORDER[level] < threshold()) return;
+  const entry = {
+    ...serializeFields(fields),
+    // Placés après le spread : un champ ne peut pas écraser ces clés.
+    severity: SEVERITY[level],
+    message: redactText(message),
+    time: (/* @__PURE__ */ new Date()).toISOString()
+  };
+  sink(JSON.stringify(entry));
+}
+var logger = {
+  debug: (message, fields) => log("debug", message, fields),
+  info: (message, fields) => log("info", message, fields),
+  warn: (message, fields) => log("warn", message, fields),
+  error: (message, fields) => log("error", message, fields)
+};
+
 // src/server/engine/vu/run-step.ts
 var PREVIEW_CHARS = 1024;
 function toError(err) {
   if (err instanceof AppError) return { code: err.code, message: err.message };
-  console.error("[engine] erreur inattendue", err);
+  logger.error("Erreur inattendue pendant l'ex\xE9cution d'une \xE9tape", { err });
   return {
     code: "INTERNAL_ERROR",
     message: "Erreur inattendue pendant l'ex\xE9cution de l'\xE9tape."
