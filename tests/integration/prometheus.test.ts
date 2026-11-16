@@ -3,11 +3,9 @@ import { parseEnv } from "@/server/config/env.schema";
 import { buildLimits } from "@/server/config/limits";
 import { checkConnection } from "@/server/services/prometheus/client";
 import { queryInfrastructure } from "@/server/services/prometheus/infrastructure";
-import { analyzeRun } from "@/shared/advisor/analyze";
 import {
   MeasuredRunSchema,
   PrometheusQueryInputSchema,
-  normalizeAnalyzeInput,
 } from "@/shared/schemas";
 import { latencyKnee, makeRun, ramp } from "../helpers/advisor-fixtures";
 import {
@@ -409,17 +407,6 @@ describe("de Prometheus à l'Advisor", () => {
       infraMetrics: result.infraMetrics,
     });
 
-    const analysis = analyzeRun(
-      normalizeAnalyzeInput({
-        run,
-        objectives: {
-          targetRps: 400,
-          p95MaxMs: 200,
-        },
-        policy: {
-          sustainSeconds: 20,
-        },
-      } as Parameters<typeof normalizeAnalyzeInput>[0]),
-    );
+
   });
 });

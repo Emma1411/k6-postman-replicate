@@ -1,4 +1,4 @@
-import { afterEach, beforeAll, afterAll, describe, expect, it } from "vitest";
+import {  beforeAll, afterAll, describe, expect, it } from "vitest";
 import { shutdown } from "@/server/engine/runs/shutdown";
 // Reprends la fabrique de registre (workers en processus) et le helper de scénario
 // déjà utilisés dans tests/integration/load-run.test.ts :

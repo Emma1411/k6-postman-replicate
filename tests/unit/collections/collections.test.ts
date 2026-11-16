@@ -7,7 +7,7 @@ import {
   resolveRequest,
   walkRequests,
 } from "@/shared/collections/utils";
-import { COLLECTION_FORMAT, CollectionError, ENVIRONMENT_FORMAT, parseCollection, parseEnvironment, type FolderItem, type RequestItem } from "@/shared/schemas";
+import { COLLECTION_FORMAT, CollectionError, ENVIRONMENT_FORMAT, parseCollection, parseEnvironment,  type RequestItem } from "@/shared/schemas";
 
 const request = (id: string, authMode: "inherit" | "own", extra: Record<string, unknown> = {}, requestExtra: Record<string, unknown> = {}) => ({
   type: "request",

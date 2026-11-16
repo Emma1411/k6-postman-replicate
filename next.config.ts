@@ -1,3 +1,4 @@
+
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -14,6 +15,14 @@ const nextConfig: NextConfig = {
     return [
       { source: "/:path*", headers: securityHeaders },
       { source: "/api/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
+    ];
+  },
+  async redirects() {
+    return [
+      { source: "/client", destination: "/requests", permanent: false },
+      { source: "/collections", destination: "/requests", permanent: false },
+      { source: "/reports", destination: "/load", permanent: false },
+      { source: "/advisor", destination: "/sizing", permanent: false },
     ];
   },
 };

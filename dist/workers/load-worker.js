@@ -32472,7 +32472,12 @@ function redactText(text) {
 }
 
 // src/server/utils/logger.ts
-var ORDER = { debug: 10, info: 20, warn: 30, error: 40 };
+var ORDER = {
+  debug: 10,
+  info: 20,
+  warn: 30,
+  error: 40
+};
 var SEVERITY = {
   debug: "DEBUG",
   info: "INFO",
@@ -32480,8 +32485,7 @@ var SEVERITY = {
   error: "ERROR"
 };
 var stdoutSink = (line) => {
-  process.stdout.write(`${line}
-`);
+  console.log(line);
 };
 var sink = stdoutSink;
 function threshold() {
@@ -32496,13 +32500,18 @@ function describeError(err) {
       stack: err.stack ? redactText(err.stack) : void 0
     };
   }
-  return { message: redactText(String(err)) };
+  return {
+    message: redactText(String(err))
+  };
 }
 function serializeFields(fields) {
   const out = {};
   for (const [key, value] of Object.entries(fields)) {
-    if (key === "err" || key === "error") out.error = describeError(value);
-    else out[key] = typeof value === "string" ? redactText(value) : value;
+    if (key === "err" || key === "error") {
+      out.error = describeError(value);
+    } else {
+      out[key] = typeof value === "string" ? redactText(value) : value;
+    }
   }
   return out;
 }
@@ -32510,7 +32519,6 @@ function log(level, message, fields = {}) {
   if (ORDER[level] < threshold()) return;
   const entry = {
     ...serializeFields(fields),
-    // Placés après le spread : un champ ne peut pas écraser ces clés.
     severity: SEVERITY[level],
     message: redactText(message),
     time: (/* @__PURE__ */ new Date()).toISOString()
@@ -32978,8 +32986,9 @@ var import_node_zlib = __toESM(require("zlib"));
 var import_node_perf_hooks2 = require("perf_hooks");
 function mapNetworkError(err) {
   if (err instanceof AppError) return err;
-  const code = err?.code;
-  const message = err?.message ?? "erreur inconnue";
+  const rawCode = typeof err === "object" && err !== null && "code" in err ? err.code : void 0;
+  const code = typeof rawCode === "string" ? rawCode : void 0;
+  const message = err instanceof Error ? err.message : typeof err === "string" ? err : "erreur inconnue";
   switch (code) {
     case "ECONNREFUSED":
       return new AppError(
@@ -32989,9 +32998,11 @@ function mapNetworkError(err) {
       );
     case "ENOTFOUND":
     case "EAI_AGAIN":
-      return new AppError("UPSTREAM_ERROR", "Nom d'h\xF4te introuvable.", {
-        code
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "Nom d'h\xF4te introuvable.",
+        { code }
+      );
     case "ECONNRESET":
       return new AppError(
         "UPSTREAM_ERROR",
@@ -32999,16 +33010,20 @@ function mapNetworkError(err) {
         { code }
       );
     case "ETIMEDOUT":
-      return new AppError("UPSTREAM_ERROR", "D\xE9lai de connexion d\xE9pass\xE9.", {
-        code
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "D\xE9lai de connexion d\xE9pass\xE9.",
+        { code }
+      );
     case "EHOSTUNREACH":
     case "ENETUNREACH":
-      return new AppError("UPSTREAM_ERROR", "Serveur cible injoignable.", {
-        code
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "Serveur cible injoignable.",
+        { code }
+      );
   }
-  if (code && /^(CERT_|ERR_TLS_|UNABLE_TO_|DEPTH_ZERO|SELF_SIGNED)/.test(code)) {
+  if (/^(CERT_|ERR_TLS_|UNABLE_TO_|DEPTH_ZERO|SELF_SIGNED)/.test(code ?? "")) {
     return new AppError(
       "UPSTREAM_ERROR",
       `Erreur de certificat TLS (${code}).`,
@@ -33023,13 +33038,17 @@ function mapNetworkError(err) {
     );
   }
   if (code?.startsWith("ERR_INVALID_")) {
-    return new AppError("VALIDATION_ERROR", `Requ\xEAte invalide : ${message}`, {
-      code
-    });
+    return new AppError(
+      "VALIDATION_ERROR",
+      `Requ\xEAte invalide : ${message}`,
+      { code }
+    );
   }
-  return new AppError("UPSTREAM_ERROR", `Erreur r\xE9seau : ${code ?? message}.`, {
-    code
-  });
+  return new AppError(
+    "UPSTREAM_ERROR",
+    `Erreur r\xE9seau : ${code ?? message}.`,
+    code ? { code } : {}
+  );
 }
 function createDecoder(encoding) {
   switch (encoding) {

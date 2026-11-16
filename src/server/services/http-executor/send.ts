@@ -37,10 +37,24 @@ export interface HopResult {
 
 const round = (n: number) => Math.round(n * 100) / 100;
 
+
 export function mapNetworkError(err: unknown): AppError {
   if (err instanceof AppError) return err;
-  const code = (err as NodeJS.ErrnoException | undefined)?.code;
-  const message = (err as Error | undefined)?.message ?? "erreur inconnue";
+
+  const rawCode =
+    typeof err === "object" && err !== null && "code" in err
+      ? err.code
+      : undefined;
+
+  // Certaines bibliothèques peuvent fournir un code non textuel.
+  const code = typeof rawCode === "string" ? rawCode : undefined;
+
+  const message =
+    err instanceof Error
+      ? err.message
+      : typeof err === "string"
+        ? err
+        : "erreur inconnue";
 
   switch (code) {
     case "ECONNREFUSED":
@@ -49,37 +63,46 @@ export function mapNetworkError(err: unknown): AppError {
         "Connexion refusée par le serveur cible.",
         { code },
       );
+
     case "ENOTFOUND":
     case "EAI_AGAIN":
-      return new AppError("UPSTREAM_ERROR", "Nom d'hôte introuvable.", {
-        code,
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "Nom d'hôte introuvable.",
+        { code },
+      );
+
     case "ECONNRESET":
       return new AppError(
         "UPSTREAM_ERROR",
         "Connexion interrompue par le serveur cible.",
         { code },
       );
+
     case "ETIMEDOUT":
-      return new AppError("UPSTREAM_ERROR", "Délai de connexion dépassé.", {
-        code,
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "Délai de connexion dépassé.",
+        { code },
+      );
+
     case "EHOSTUNREACH":
     case "ENETUNREACH":
-      return new AppError("UPSTREAM_ERROR", "Serveur cible injoignable.", {
-        code,
-      });
+      return new AppError(
+        "UPSTREAM_ERROR",
+        "Serveur cible injoignable.",
+        { code },
+      );
   }
-  if (
-    code &&
-    /^(CERT_|ERR_TLS_|UNABLE_TO_|DEPTH_ZERO|SELF_SIGNED)/.test(code)
-  ) {
+
+  if (/^(CERT_|ERR_TLS_|UNABLE_TO_|DEPTH_ZERO|SELF_SIGNED)/.test(code ?? "")) {
     return new AppError(
       "UPSTREAM_ERROR",
       `Erreur de certificat TLS (${code}).`,
       { code },
     );
   }
+
   if (code?.startsWith("HPE_")) {
     return new AppError(
       "UPSTREAM_ERROR",
@@ -87,15 +110,22 @@ export function mapNetworkError(err: unknown): AppError {
       { code },
     );
   }
+
   if (code?.startsWith("ERR_INVALID_")) {
-    return new AppError("VALIDATION_ERROR", `Requête invalide : ${message}`, {
-      code,
-    });
+    return new AppError(
+      "VALIDATION_ERROR",
+      `Requête invalide : ${message}`,
+      { code },
+    );
   }
-  return new AppError("UPSTREAM_ERROR", `Erreur réseau : ${code ?? message}.`, {
-    code,
-  });
+
+  return new AppError(
+    "UPSTREAM_ERROR",
+    `Erreur réseau : ${code ?? message}.`,
+    code ? { code } : {},
+  );
 }
+
 
 
 function pairHeaders(raw: string[]): Array<{ key: string; value: string }> {

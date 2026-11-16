@@ -1,9 +1,8 @@
 import "server-only";
 import { limits } from "@/server/config";
-import { executeHttpRequest } from "@/server/services/http-executor";
-import type { ExecuteRequestInput } from "@/shared/schemas";
+import { executeWithAssertions } from "@/server/services/http-executor/with-assertions";
+import type { SendRequestInput } from "@/shared/schemas";
 
-export async function executeRequestController(input: ExecuteRequestInput): Promise<Response> {
-  const result = await executeHttpRequest(input, { limits });
-  return Response.json(result);
+export async function executeRequestController(input: SendRequestInput): Promise<Response> {
+  return Response.json(await executeWithAssertions(input, { limits }));
 }

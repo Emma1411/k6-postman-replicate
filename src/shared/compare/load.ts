@@ -1,5 +1,5 @@
 import { ObjectivesSchema } from "@/shared/schemas";
-import type { ExecutorConfig, Objectives } from "@/shared/schemas";
+import type { ExecutorConfig } from "@/shared/schemas";
 import type { z } from "zod";
 import type { CapacityEvidence, Confidence } from "@/shared/types/advisor-result";
 import type {

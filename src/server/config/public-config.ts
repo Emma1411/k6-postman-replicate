@@ -1,12 +1,16 @@
+
 import type { Env } from "./env.schema";
 import type { Limits } from "./limits";
+import type { PublicConfig } from "@/shared/types/public-config";
+
+export type { PublicConfig };
 
 /** Configuration exposée au navigateur. Ne contient aucun détail d'infrastructure. */
 export function buildPublicConfig(
   env: Pick<Env, "APP_VERSION" | "BOT_PROTECTION" | "TURNSTILE_SITE_KEY">,
   limits: Limits,
   workerReady: boolean,
-) {
+): PublicConfig {
   return {
     version: env.APP_VERSION,
     deploymentMode: limits.deployment.mode,
@@ -18,7 +22,7 @@ export function buildPublicConfig(
       botProtection:
         env.BOT_PROTECTION === "turnstile"
           ? {
-              provider: "turnstile" as const,
+              provider: "turnstile",
               siteKey: env.TURNSTILE_SITE_KEY ?? null,
             }
           : null,
@@ -46,5 +50,3 @@ export function buildPublicConfig(
     },
   };
 }
-
-export type PublicConfig = ReturnType<typeof buildPublicConfig>;
