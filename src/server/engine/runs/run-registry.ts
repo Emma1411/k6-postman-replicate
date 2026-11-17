@@ -1,4 +1,3 @@
-
 import "server-only";
 import fs from "node:fs";
 import os from "node:os";
@@ -33,6 +32,11 @@ export class RunRegistry {
     this.deps = deps;
   }
 
+  /** Nombre de tests en cours. */
+  activeCount(): number {
+    return [...this.runs.values()].filter((run) => !run.isFinished).length;
+  }
+
   create(scenario: LoadScenario): LoadRun {
     this.deps.assertReady?.();
 
@@ -59,10 +63,7 @@ export class RunRegistry {
     this.runs.set(run.id, run);
 
     void run.finished.then(() => {
-      const timer = setTimeout(
-        () => this.runs.delete(run.id),
-        this.deps.ttlMs,
-      );
+      const timer = setTimeout(() => this.runs.delete(run.id), this.deps.ttlMs);
       timer.unref?.();
     });
 
@@ -149,20 +150,14 @@ export function peekRegistry(): RunRegistry | undefined {
 /** Registre du serveur, conservé sur globalThis en développement. */
 export function getRegistry(): RunRegistry {
   if (!globalStore.__runRegistry) {
-    const workerFile = path.resolve(
-      process.cwd(),
-      appLimits.load.workerPath,
-    );
+    const workerFile = path.resolve(process.cwd(), appLimits.load.workerPath);
 
     globalStore.__runRegistry = new RunRegistry({
       limits: appLimits,
       createWorker: () => createLoadWorker(workerFile),
       maxWorkers: Math.max(
         1,
-        Math.min(
-          appLimits.load.maxWorkers,
-          os.availableParallelism(),
-        ),
+        Math.min(appLimits.load.maxWorkers, os.availableParallelism()),
       ),
       detachGraceMs: appLimits.load.detachGraceSeconds * 1000,
       gracefulStopMs: appLimits.load.gracefulStopSeconds * 1000,

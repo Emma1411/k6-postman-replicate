@@ -10,10 +10,12 @@ export function buildPublicConfig(
   env: Pick<Env, "APP_VERSION" | "BOT_PROTECTION" | "TURNSTILE_SITE_KEY">,
   limits: Limits,
   workerReady: boolean,
+  activeRuns = 0,
 ): PublicConfig {
   return {
     version: env.APP_VERSION,
     deploymentMode: limits.deployment.mode,
+    status: { busy: activeRuns >= limits.load.maxConcurrentRuns },
     features: {
       loadTests: workerReady,
       privateNetworks: limits.network.allowPrivateNetworks,

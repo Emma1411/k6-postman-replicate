@@ -2,6 +2,7 @@
 export interface PublicConfig {
   version: string;
   deploymentMode: "public" | "private";
+  status: { busy: boolean };
   features: {
     loadTests: boolean;
     privateNetworks: boolean;
@@ -23,6 +24,10 @@ export interface PublicConfig {
       maxConcurrentRuns: number;
       runTtlSeconds: number;
     };
-    rateLimit: { windowSeconds: number; maxRequests: number; maxLoadRunsPerHour: number };
+    rateLimit: {
+      windowSeconds: number;
+      maxRequests: number;
+      maxLoadRunsPerHour: number;
+    };
   };
 }

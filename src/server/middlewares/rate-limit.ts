@@ -68,7 +68,7 @@ export function getLimiters(): Limiters {
   if (!globalStore.__apiLimiters) {
     globalStore.__apiLimiters = {
       general: new SlidingWindowLimiter(limits.rateLimit.windowSeconds * 1000, limits.rateLimit.maxRequests),
-      loadRuns: new SlidingWindowLimiter(3_600_000, limits.rateLimit.maxLoadRunsPerHour),
+      loadRuns: new SlidingWindowLimiter(7_600_000, limits.rateLimit.maxLoadRunsPerHour),
     };
   }
   return globalStore.__apiLimiters;

@@ -1,8 +1,9 @@
 import { openDB, type DBSchema, type IDBPDatabase } from "idb";
-import type { Collection, Environment } from "@/shared/schemas";
+import type { Collection, Environment, LoadScenario } from "@/shared/schemas";
+import type { LoadRunResult, WindowPoint } from "@/shared/types/load-result";
 
 export const DB_NAME = "api-engineering-platform";
-export const DB_VERSION = 1;
+export const DB_VERSION = 2;
 
 export interface HistoryEntry {
   id: string;
@@ -23,6 +24,18 @@ export interface RunRecord {
   startedAt: number;
   scenarioName: string;
   status: "running" | "finished" | "unknown";
+  /** Le scénario lancé : le serveur ne le renvoie pas quand on se rattache. */
+  scenario?: LoadScenario;
+}
+
+/** Résultat d'un test terminé, conservé dans ce navigateur pour l'onglet « Tests précédents ». */
+export interface StoredLoadResult {
+  id: string;
+  savedAt: number;
+  name: string;
+  scenario: LoadScenario | null;
+  result: LoadRunResult;
+  points: WindowPoint[];
 }
 
 interface WorkspaceDB extends DBSchema {
@@ -31,6 +44,7 @@ interface WorkspaceDB extends DBSchema {
   history: { key: string; value: HistoryEntry; indexes: { "by-created": number } };
   settings: { key: string; value: SettingRecord };
   runs: { key: string; value: RunRecord; indexes: { "by-started": number } };
+  results: { key: string; value: StoredLoadResult; indexes: { "by-saved": number } };
 }
 
 export type Db = IDBPDatabase<WorkspaceDB>;
@@ -47,12 +61,17 @@ let dbPromise: Promise<Db> | null = null;
 
 export function getDb(): Promise<Db> {
   dbPromise ??= openDB<WorkspaceDB>(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      db.createObjectStore("collections", { keyPath: "id" });
-      db.createObjectStore("environments", { keyPath: "id" });
-      db.createObjectStore("history", { keyPath: "id" }).createIndex("by-created", "createdAt");
-      db.createObjectStore("settings", { keyPath: "key" });
-      db.createObjectStore("runs", { keyPath: "runId" }).createIndex("by-started", "startedAt");
+    upgrade(db, oldVersion) {
+      if (oldVersion < 1) {
+        db.createObjectStore("collections", { keyPath: "id" });
+        db.createObjectStore("environments", { keyPath: "id" });
+        db.createObjectStore("history", { keyPath: "id" }).createIndex("by-created", "createdAt");
+        db.createObjectStore("settings", { keyPath: "key" });
+        db.createObjectStore("runs", { keyPath: "runId" }).createIndex("by-started", "startedAt");
+      }
+      if (oldVersion < 2) {
+        db.createObjectStore("results", { keyPath: "id" }).createIndex("by-saved", "savedAt");
+      }
     },
     terminated() {
       dbPromise = null;

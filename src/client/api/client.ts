@@ -52,7 +52,13 @@ async function toApiError(res: Response): Promise<ApiError> {
   return new ApiError(code, message, res.status, error?.details);
 }
 
-async function attempt<T>(path: string, options: RequestOptions): Promise<T> {
+/**
+ * Appelle l'API du service. Lève toujours une ApiError.
+ * Sur « CHALLENGE_REQUIRED », lance le défi anti-robot puis rejoue la requête UNE fois.
+ */
+
+
+async function attemptRaw(path: string, options: RequestOptions): Promise<Response> {
   const hasBody = options.body !== undefined;
   let res: Response;
   try {
@@ -70,21 +76,31 @@ async function attempt<T>(path: string, options: RequestOptions): Promise<T> {
     throw new ApiError("NETWORK_ERROR", "Impossible de joindre le serveur.");
   }
   if (!res.ok) throw await toApiError(res);
-  return (await res.json()) as T;
+  return res;
 }
 
-/**
- * Appelle l'API du service. Lève toujours une ApiError.
- * Sur « CHALLENGE_REQUIRED », lance le défi anti-robot puis rejoue la requête UNE fois.
- */
-export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+/** Sur « CHALLENGE_REQUIRED », lance le défi anti-robot puis rejoue UNE fois. */
+async function withChallenge<T>(options: RequestOptions, run: () => Promise<T>): Promise<T> {
   try {
-    return await attempt<T>(path, options);
+    return await run();
   } catch (err) {
     if (err instanceof ApiError && err.code === "CHALLENGE_REQUIRED" && !options.skipChallenge) {
       await runChallenge();
-      return attempt<T>(path, options);
+      return run();
     }
     throw err;
   }
+}
+
+/** Appelle l'API du service et lit la réponse JSON. Lève toujours une ApiError. */
+export function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  return withChallenge(options, async () => {
+    const res = await attemptRaw(path, options);
+    return (await res.json()) as T;
+  });
+}
+
+/** Comme apiFetch, mais renvoie la réponse brute sans lire son corps (flux SSE). */
+export function apiStream(path: string, options: RequestOptions = {}): Promise<Response> {
+  return withChallenge(options, () => attemptRaw(path, options));
 }
