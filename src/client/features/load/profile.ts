@@ -190,3 +190,22 @@ export function estimateRps(vus: number, responseMs: number, thinkTimeMs: number
   const cycleSeconds = (Math.max(0, responseMs) + Math.max(0, thinkTimeMs)) / 1000;
   return cycleSeconds > 0 ? vus / cycleSeconds : 0;
 }
+
+export interface PreviewPoint {
+  t: number;
+  value: number;
+}
+
+/** Les points de la courbe de charge, pour la prévisualisation de l'assistant. */
+export function previewPoints(input: ProfileDraft): PreviewPoint[] {
+  const p = sanitizeProfile(input);
+  const start =
+    p.kind === "spike" ? spikeBase(p.vus) : p.kind === "constant" ? p.vus : p.kind === "arrival-rate" ? p.rate : 0;
+  const out: PreviewPoint[] = [{ t: 0, value: start }];
+  let t = 0;
+  for (const stage of profileStages(p)) {
+    t += stage.durationSeconds;
+    out.push({ t, value: stage.target });
+  }
+  return out;
+}

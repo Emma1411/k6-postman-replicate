@@ -106,6 +106,16 @@ export const GLOSSARY = {
     definition:
       "Le temps pour télécharger le corps de la réponse une fois qu'elle a commencé à arriver. Il grandit avec la taille de la réponse.",
   },
+    healthyThroughput: {
+    label: "Débit maximal sain",
+    definition:
+      "Le plus haut débit observé pendant lequel tes objectifs (p95, taux d'erreur) étaient encore respectés.",
+  },
+  saturationPoint: {
+    label: "Seuil de saturation",
+    definition:
+      "Le débit à partir duquel tes objectifs ne sont plus respectés. C'est une estimation, encadrée par les mesures du test.",
+  },
 } as const satisfies Record<string, GlossaryEntry>;
 
 export type GlossaryTerm = keyof typeof GLOSSARY;
