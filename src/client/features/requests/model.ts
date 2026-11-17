@@ -85,15 +85,58 @@ export function draftToSendInput(draft: RequestDraft, variables: Record<string, 
   return { request: toHttpRequest(draft), variables, assertions: draft.assertions };
 }
 
+
+const needsValue = (operator: string) => operator !== "exists" && operator !== "notExists";
+
+/** Le serveur refuse une assertion incomplète : on le dit avant l'envoi. */
+export function validateAssertions(assertions: Assertion[]): string | null {
+  for (let i = 0; i < assertions.length; i++) {
+    const a = assertions[i];
+    const where = `Assertion ${i + 1}`;
+
+    switch (a.type) {
+      case "responseTime":
+        if (!(a.valueMs > 0)) return `${where} : saisis un temps supérieur à 0 ms.`;
+        break;
+
+      case "header":
+        if (!a.headerName.trim()) return `${where} : saisis le nom de l'en-tête.`;
+        if (needsValue(a.operator) && !a.value) return `${where} : saisis la valeur attendue.`;
+        break;
+
+      case "jsonPath":
+        if (!a.path.trim()) return `${where} : saisis un chemin JSONPath, par exemple $.data.id.`;
+        if (needsValue(a.operator) && a.value === undefined) return `${where} : saisis la valeur attendue.`;
+        break;
+
+      case "bodyContains":
+        if (!a.value) return `${where} : saisis le texte à chercher dans la réponse.`;
+        break;
+
+      default:
+        break;
+    }
+  }
+
+  return null;
+}
+
+
+/** Premier contrôle côté navigateur, avant d'appeler le serveur. */
+
 /** Premier contrôle côté navigateur, avant d'appeler le serveur. */
 export function validateDraft(draft: RequestDraft): string | null {
   const url = draft.url.trim();
+
   if (!url) return "Saisis une adresse à appeler.";
+
   if (!/^(https?:\/\/|\{\{)/i.test(url)) {
     return "L'adresse doit commencer par http:// ou https://, ou par une variable comme {{base_url}}.";
   }
-  return null;
+
+  return validateAssertions(draft.assertions);
 }
+
 
 /** Vérifie qu'un brouillon relu depuis le stockage a la forme attendue. */
 export function isRequestDraft(value: unknown): value is RequestDraft {

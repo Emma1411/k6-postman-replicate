@@ -1,24 +1,15 @@
 "use client";
 
+import { Explain } from "@/client/components/explain";
 import { Badge } from "@/client/components/ui/badge";
 import { Skeleton } from "@/client/components/ui/skeleton";
-import { Explain } from "@/client/components/explain";
-import type { GlossaryTerm } from "@/client/content/glossary";
-import { formatBytes, formatDuration, formatInt } from "@/client/lib/format";
+import { buildLimitRows } from "@/client/content/limit-rows";
 import { useAppSelector } from "@/client/store/hooks";
-
-interface Row {
-  label: string;
-  value: string;
-  term?: GlossaryTerm;
-}
 
 export function InstanceLimits() {
   const config = useAppSelector((s) => s.config);
 
-  if (config.status === "idle" || config.status === "loading") {
-    return <Skeleton className="h-48 w-full" />;
-  }
+  if (config.status === "idle" || config.status === "loading") return <Skeleton className="h-48 w-full" />;
   if (config.status === "error") {
     return (
       <p role="alert" className="text-sm text-destructive-text">
@@ -27,21 +18,8 @@ export function InstanceLimits() {
     );
   }
 
-  const { limits, deploymentMode, features } = config.value;
-  const rows: Row[] = [
-    { label: "Utilisateurs virtuels simultanés", value: formatInt(limits.load.maxVus), term: "vu" },
-    { label: "Durée d'un test de charge", value: formatDuration(limits.load.maxDurationSeconds) },
-    { label: "Débit maximal", value: `${formatInt(limits.load.maxRequestsPerSecond)} req/s`, term: "rps" },
-    { label: "Tests de charge en parallèle", value: formatInt(limits.load.maxConcurrentRuns) },
-    { label: "Tests de charge par heure", value: formatInt(limits.rateLimit.maxLoadRunsPerHour) },
-    {
-      label: "Appels à l'API",
-      value: `${formatInt(limits.rateLimit.maxRequests)} par ${formatDuration(limits.rateLimit.windowSeconds)}`,
-    },
-    { label: "Taille maximale d'une réponse", value: formatBytes(limits.http.maxResponseBytes) },
-    { label: "Délai maximal d'une requête", value: formatDuration(limits.http.maxTimeoutMs / 1000) },
-    { label: "Étapes par scénario", value: formatInt(limits.workflow.maxSteps) },
-  ];
+  const { deploymentMode, features } = config.value;
+  const rows = buildLimitRows(config.value);
 
   return (
     <div className="space-y-4">

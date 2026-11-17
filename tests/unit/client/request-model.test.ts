@@ -1,5 +1,13 @@
+
 import { describe, expect, it } from "vitest";
-import { emptyBody, emptyDraft, isRequestDraft, toHttpRequest, validateDraft } from "@/client/features/requests/model";
+import {
+  emptyBody,
+  emptyDraft,
+  isRequestDraft,
+  toHttpRequest,
+  validateDraft,
+  validateAssertions,
+} from "@/client/features/requests/model";
 import { HttpRequestSchema } from "@/shared/schemas";
 
 describe("toHttpRequest", () => {
@@ -14,22 +22,50 @@ describe("toHttpRequest", () => {
         { key: "X-Off", value: "1", enabled: false },
         { key: "  ", value: "vide", enabled: true },
       ],
-      body: { ...emptyBody(), kind: "form-data" as const, fields: [{ key: "a", value: "1", enabled: true }, { key: "b", value: "2", enabled: false }] },
+      body: {
+        ...emptyBody(),
+        kind: "form-data" as const,
+        fields: [
+          { key: "a", value: "1", enabled: true },
+          { key: "b", value: "2", enabled: false },
+        ],
+      },
       timeoutMs: 5000,
     };
+
     const request = toHttpRequest(draft);
+
     expect(HttpRequestSchema.safeParse(request).success).toBe(true);
     expect(request.name).toBe("Liste");
     expect(request.url).toBe("https://api.exemple.com/v1/products?page=1");
     expect(request.params).toEqual([]);
-    expect(request.headers).toEqual([{ key: "Accept", value: "application/json", enabled: true }]);
-    expect(request.body).toEqual({ type: "form-data", fields: [{ kind: "text", key: "a", value: "1", enabled: true }] });
+    expect(request.headers).toEqual([
+      { key: "Accept", value: "application/json", enabled: true },
+    ]);
+    expect(request.body).toEqual({
+      type: "form-data",
+      fields: [{ kind: "text", key: "a", value: "1", enabled: true }],
+    });
     expect(request.timeoutMs).toBe(5000);
   });
 
   it("utilise text/plain pour un corps brut sans type", () => {
-    const request = toHttpRequest({ ...emptyDraft(), url: "https://x.test", body: { ...emptyBody(), kind: "raw", content: "x", contentType: " " } });
-    expect(request.body).toEqual({ type: "raw", content: "x", contentType: "text/plain" });
+    const request = toHttpRequest({
+      ...emptyDraft(),
+      url: "https://x.test",
+      body: {
+        ...emptyBody(),
+        kind: "raw",
+        content: "x",
+        contentType: " ",
+      },
+    });
+
+    expect(request.body).toEqual({
+      type: "raw",
+      content: "x",
+      contentType: "text/plain",
+    });
   });
 });
 
@@ -48,5 +84,59 @@ describe("isRequestDraft", () => {
     expect(isRequestDraft(null)).toBe(false);
     expect(isRequestDraft({ method: "GET" })).toBe(false);
     expect(isRequestDraft({ ...emptyDraft(), headers: "x" })).toBe(false);
+  });
+});
+
+describe("validateAssertions", () => {
+  it("accepte des assertions complètes", () => {
+    expect(
+      validateAssertions([
+        { type: "status", expected: 200 },
+        { type: "responseTime", operator: "lt", valueMs: 500 },
+        { type: "header", headerName: "Content-Type", operator: "contains", value: "json" },
+        { type: "jsonPath", path: "$.id", operator: "exists" },
+        { type: "jsonPath", path: "$.n", operator: "equals", value: "" },
+        { type: "bodyContains", value: "ok" },
+      ]),
+    ).toBeNull();
+  });
+
+  it("signale la première assertion incomplète avec son numéro", () => {
+    expect(
+      validateAssertions([
+        { type: "status", expected: 200 },
+        { type: "bodyContains", value: "" },
+      ]),
+    ).toMatch(/Assertion 2/);
+
+    expect(
+      validateAssertions([{ type: "responseTime", operator: "lt", valueMs: 0 }]),
+    ).toMatch(/Assertion 1.*temps/);
+
+    expect(
+      validateAssertions([{ type: "header", headerName: " ", operator: "exists" }]),
+    ).toMatch(/en-tête/);
+
+    expect(
+      validateAssertions([{ type: "header", headerName: "X", operator: "equals" }]),
+    ).toMatch(/valeur/);
+
+    expect(
+      validateAssertions([{ type: "jsonPath", path: "", operator: "exists" }]),
+    ).toMatch(/JSONPath/);
+
+    expect(
+      validateAssertions([{ type: "jsonPath", path: "$.a", operator: "equals" }]),
+    ).toMatch(/valeur/);
+  });
+
+  it("bloque l'envoi d'un brouillon dont une assertion est incomplète", () => {
+    const draft = {
+      ...emptyDraft(),
+      url: "https://x.test",
+      assertions: [{ type: "bodyContains" as const, value: "" }],
+    };
+
+    expect(validateDraft(draft)).toMatch(/Assertion 1/);
   });
 });
