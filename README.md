@@ -19,7 +19,7 @@ La plateforme intègre son propre moteur de test de charge, inspiré du modèle 
 - Intégration Prometheus pour interroger les métriques d'infrastructure
 - Protection anti-robot avec Cloudflare Turnstile
 
-Aucune intelligence artificielle et aucune base de données ne sont nécessaires. Les collections, scénarios et configurations sont conservés localement dans le navigateur (IndexedDB), avec possibilité d'export et d'import JSON.
+Aucune intelligence artificielle et aucune base de données ne sont nécessaires. Les collections, scénarios et configurations sont conservés localement dans le navigateur (IndexedDB).
 
 **Lien de démonstration :https://api-engineering-602169670138.northamerica-northeast1.run.app/
 
