@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Cpu, RotateCw, ShieldCheck, Terminal, Zap } from "lucide-react";
+import {
+  ArrowRight,
+  Cpu,
+  RotateCw,
+  ShieldCheck,
+  Terminal,
+  Zap,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,19 +17,20 @@ import {
   DialogTitle,
 } from "@/client/components/ui/dialog";
 import { Button } from "@/client/components/ui/button";
-import { settleBotChallenge, subscribeBotChallenge } from "@/client/lib/bot-challenge";
+import {
+  settleBotChallenge,
+  subscribeBotChallenge,
+} from "@/client/lib/bot-challenge";
 
-const SELF_HOST_URL =
-  "https://github.com/Emma1411/k6-postman-replicate";
-
-
+const SELF_HOST_URL = "https://github.com/Emma1411/k6-postman-replicate";
 
 let scriptPromise: Promise<void> | null = null;
 function loadTurnstile(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
   scriptPromise ??= new Promise<void>((resolve, reject) => {
     const s = document.createElement("script");
-    s.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    s.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
     s.async = true;
     s.onload = () => resolve();
     s.onerror = () => {
@@ -113,7 +121,9 @@ export function BotChallengeDialog() {
       })
       .catch(() => {
         setStatus("error");
-        setMessage("Le widget n'a pas pu charger (réseau ou bloqueur de contenu).");
+        setMessage(
+          "Le widget n'a pas pu charger (réseau ou bloqueur de contenu).",
+        );
       });
     return () => {
       cancelled = true;
@@ -135,7 +145,11 @@ export function BotChallengeDialog() {
         return;
       }
       const body = await res.json().catch(() => null);
-      setMessage(body?.error?.message ?? body?.message ?? "La vérification a échoué. Réessaie.");
+      setMessage(
+        body?.error?.message ??
+          body?.message ??
+          "La vérification a échoué. Réessaie.",
+      );
     } catch {
       setMessage("Serveur injoignable. Réessaie.");
     }
@@ -153,14 +167,15 @@ export function BotChallengeDialog() {
           <div>
             <DialogTitle className="text-xl">Contrôle anti-robot</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Vérification d'accès au banc de test public
+              Vérification d’accès au service public
             </DialogDescription>
           </div>
         </DialogHeader>
 
         <p className="text-base leading-relaxed text-slate-300">
-          Pour protéger le banc de test partagé contre les surcharges automatisées et garantir des créneaux d'exécution
-          équitables pour chaque développeur.
+          Pour protéger le banc de test partagé contre les surcharges
+          automatisées et garantir des créneaux d’exécution équitables pour
+          chaque développeur.
         </p>
 
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -177,11 +192,13 @@ export function BotChallengeDialog() {
 
         <div className="rounded-xl bg-slate-900/50 p-4">
           <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-            <Cpu className="size-4 text-sky-300" aria-hidden /> Pourquoi ce contrôle ?
+            <Cpu className="size-4 text-sky-300" aria-hidden /> Pourquoi ce
+            contrôle ?
           </div>
           <p className="text-sm leading-relaxed text-slate-400">
-            Chaque test de charge mobilise des threads CPU sur notre générateur. Ce filtre stoppe l'automatisation
-            abusive sans toucher à tes données : tes scénarios, clés d'API et payloads restent dans ton navigateur
+            Chaque test de charge mobilise des threads CPU sur notre générateur.
+            Ce filtre stoppe l’automatisation abusive sans toucher à tes données
+            : tes scénarios, clés d’API et payloads restent dans ton navigateur
             (IndexedDB).
           </p>
           <a
@@ -191,10 +208,12 @@ export function BotChallengeDialog() {
             className="mt-3 flex items-center justify-between rounded-md bg-slate-950/60 px-3 py-2 text-sm text-slate-300 hover:text-sky-300"
           >
             <span className="flex items-center gap-2">
-              <Terminal className="size-4" aria-hidden /> Besoin de bypass complet ?
+              <Terminal className="size-4" aria-hidden /> Besoin de bypass
+              complet ?
             </span>
             <span className="flex items-center gap-1 font-medium text-slate-100">
-              Déployer en Docker autonome <ArrowRight className="size-4" aria-hidden />
+              Déployer en Docker autonome{" "}
+              <ArrowRight className="size-4" aria-hidden />
             </span>
           </a>
         </div>
@@ -209,7 +228,9 @@ export function BotChallengeDialog() {
             className="flex-1 bg-sky-300 text-slate-950 hover:bg-sky-200 disabled:bg-slate-800 disabled:text-slate-500"
           >
             <Zap className="mr-2 size-4" aria-hidden />
-            {status === "verifying" ? "Vérification…" : "Continuer vers le test de charge"}
+            {status === "verifying"
+              ? "Vérification…"
+              : "Continuer vers le test de charge"}
           </Button>
         </div>
 
@@ -219,7 +240,8 @@ export function BotChallengeDialog() {
             onClick={() => setAttempt((a) => a + 1)}
             className="flex items-center gap-1.5 hover:text-slate-300"
           >
-            <RotateCw className="size-3.5" aria-hidden /> Widget bloqué ? Recharger le défi
+            <RotateCw className="size-3.5" aria-hidden /> Widget bloqué ?
+            Recharger le défi
           </button>
           <span>Touche Échap pour fermer</span>
         </div>

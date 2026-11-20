@@ -18,7 +18,10 @@ const TONES = {
   neutral: "text-muted-foreground",
 } as const;
 
-const DATE = new Intl.DateTimeFormat("fr-CA", { dateStyle: "medium", timeStyle: "short" });
+const DATE = new Intl.DateTimeFormat("fr-CA", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
 
 interface Props {
   onOpen: (result: StoredLoadResult) => void;
@@ -40,18 +43,35 @@ export function PreviousTests({ onOpen, onReplay, onChanged }: Props) {
     }
   }, [onChanged]);
 
+  // Chargement initial depuis IndexedDB. L'état n'est mis à jour qu'à la fin de la lecture,
+  // et plus du tout si le composant est démonté entre-temps.
   useEffect(() => {
-    void reload();
-  }, [reload]);
-
+    let cancelled = false;
+    listResults()
+      .then((all) => {
+        if (cancelled) return;
+        setItems(all);
+        onChanged(all.length);
+      })
+      .catch(() => {
+        if (!cancelled) setItems([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [onChanged]);
   if (items === null) return <Skeleton className="h-40 w-full" />;
 
   if (items.length === 0) {
     return (
       <div className="space-y-2 rounded-xl border border-border bg-card p-6">
-        <h2 className="text-base font-semibold">Aucun test pour l&apos;instant</h2>
+        <h2 className="text-base font-semibold">
+          Aucun test pour l&apos;instant
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Les résultats de tes tests apparaîtront ici, enregistrés dans ton navigateur (50 au maximum). Lance un premier test depuis l&apos;onglet « Nouveau test ».
+          Les résultats de tes tests apparaîtront ici, enregistrés dans ton
+          navigateur (50 au maximum). Lance un premier test depuis l&apos;onglet
+          « Nouveau test ».
         </p>
       </div>
     );
@@ -63,31 +83,62 @@ export function PreviousTests({ onOpen, onReplay, onChanged }: Props) {
         const status = statusLabel(item.result);
         const snap = item.result.snapshot;
         return (
-          <li key={item.id} className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-border bg-card p-4">
+          <li
+            key={item.id}
+            className="flex flex-wrap items-center gap-x-6 gap-y-3 rounded-xl border border-border bg-card p-4"
+          >
             <div className="min-w-56 flex-1 space-y-1">
               <p className="font-medium">{item.name}</p>
-              <p className="text-xs text-muted-foreground">{DATE.format(item.savedAt)} · {Math.round(item.result.durationSeconds)} s</p>
-              <span className={cn("text-xs font-medium", TONES[status.tone])}>{status.label}</span>
+              <p className="text-xs text-muted-foreground">
+                {DATE.format(item.savedAt)} ·{" "}
+                {Math.round(item.result.durationSeconds)} s
+              </p>
+              <span className={cn("text-xs font-medium", TONES[status.tone])}>
+                {status.label}
+              </span>
             </div>
             <dl className="flex gap-6 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">p95</dt>
-                <dd className="font-mono tabular-nums">{snap.http_req_duration ? formatMs(snap.http_req_duration.p95) : "—"}</dd>
+                <dd className="font-mono tabular-nums">
+                  {snap.http_req_duration
+                    ? formatMs(snap.http_req_duration.p95)
+                    : "—"}
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Débit moyen</dt>
-                <dd className="font-mono tabular-nums">{formatInt(Math.round(snap.http_reqs.rate))} req/s</dd>
+                <dd className="font-mono tabular-nums">
+                  {formatInt(Math.round(snap.http_reqs.rate))} req/s
+                </dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Erreurs</dt>
-                <dd className="font-mono tabular-nums">{snap.http_req_failed.rate !== null ? formatPercent(snap.http_req_failed.rate) : "—"}</dd>
+                <dd className="font-mono tabular-nums">
+                  {snap.http_req_failed.rate !== null
+                    ? formatPercent(snap.http_req_failed.rate)
+                    : "—"}
+                </dd>
               </div>
             </dl>
             <div className="ml-auto flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="font-mono text-[10px] uppercase">Enregistré ici</Badge>
-              <Button type="button" size="sm" onClick={() => onOpen(item)}>Ouvrir</Button>
+              <Badge
+                variant="secondary"
+                className="font-mono text-[10px] uppercase"
+              >
+                Enregistré ici
+              </Badge>
+              <Button type="button" size="sm" onClick={() => onOpen(item)}>
+                Ouvrir
+              </Button>
               {item.scenario && (
-                <Button type="button" size="sm" variant="outline" onClick={() => onReplay(item)} className="gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onReplay(item)}
+                  className="gap-1"
+                >
                   <RotateCcw className="size-4" aria-hidden />
                   Rejouer
                 </Button>
@@ -107,10 +158,23 @@ export function PreviousTests({ onOpen, onReplay, onChanged }: Props) {
                   >
                     Confirmer
                   </Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setConfirming(null)}>Annuler</Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setConfirming(null)}
+                  >
+                    Annuler
+                  </Button>
                 </>
               ) : (
-                <Button type="button" size="icon" variant="ghost" onClick={() => setConfirming(item.id)} aria-label={`Supprimer ${item.name}`}>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setConfirming(item.id)}
+                  aria-label={`Supprimer ${item.name}`}
+                >
                   <Trash2 className="size-4" aria-hidden />
                 </Button>
               )}
