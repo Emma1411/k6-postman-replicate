@@ -1,78 +1,114 @@
 # API Engineering Platform
 
-Plateforme open source et gratuite pour **tester, mesurer et dimensionner des API** : client HTTP (type Postman),
-tests fonctionnels, moteur de test de charge intégré (modèle d'exécuteurs, métriques et seuils inspiré de k6, sans
-binaire externe), comparaison de résultats, rapports, et Scalability Advisor avec planification de capacité.
-Aucune IA, aucune base de données : les configurations vivent dans le navigateur (export/import JSON).
+## Description
 
-## État du projet
+**API Engineering Platform** est une plateforme open source et gratuite dédiée au développement, au test et au dimensionnement des API.
 
-- Serveur (API, moteur de charge, Advisor, import Postman/OpenAPI, Prometheus, rapports) : terminé et testé.
-- Interface web : en cours de développement.
+Elle regroupe dans une seule interface les fonctionnalités essentielles d'un outil d'ingénierie API : client HTTP, tests fonctionnels, tests de charge, analyse des performances et planification de capacité.
 
-## Démarrage rapide
+L'objectif est de permettre aux développeurs de tester leurs API, d'identifier leurs problèmes de performance et d'estimer les ressources nécessaires à leur mise en production, sans dépendre d'outils externes complexes.
 
-```bash
-npm install
-npm run dev          # construit le worker puis lance Next sur http://localhost:3000
-npm test             # tests unitaires et d'intégration
-npm run bench        # micro-benchmark safe-regex vs RegExp natif
+La plateforme intègre son propre moteur de test de charge, inspiré du modèle d'exécution et des métriques de k6, sans nécessiter de binaire externe.
+
+### Caractéristiques principales
+
+- Client HTTP pour exécuter et analyser des requêtes API
+- Tests fonctionnels avec assertions et extractions de données
+- Moteur de test de charge intégré avec utilisateurs virtuels, métriques et seuils
+- Comparaison des résultats et génération de rapports
+- Intégration Prometheus pour interroger les métriques d'infrastructure
+- Protection anti-robot avec Cloudflare Turnstile
+
+Aucune intelligence artificielle et aucune base de données ne sont nécessaires. Les collections, scénarios et configurations sont conservés localement dans le navigateur (IndexedDB), avec possibilité d'export et d'import JSON.
+
+**Lien de démonstration :https://api-engineering-602169670138.northamerica-northeast1.run.app/
+
+---
+
+## Stack technique
+
+| Composant              | Technologie                  |
+|------------------------|------------------------------|
+| Framework              | Next.js 16 (App Router)      |
+| Langage                | TypeScript                   |
+| Interface              | React                        |
+| Styling                | Tailwind CSS                 |
+| Composants UI          | shadcn/ui                    |
+| Icônes                 | Lucide React                 |
+| Typographies           | Geist, Geist Mono            |
+| Validation             | Zod                          |
+| Moteur de charge       | Workers Node.js / TypeScript |
+| Construction des workers | tsup                       |
+| Tests                  | Vitest                       |
+| Qualité du code        | ESLint, TypeScript           |
+| Conteneurisation       | Docker                       |
+| CI/CD                  | GitHub Actions               |
+| Hébergement            | Google Cloud Run             |
+| Protection anti-robot  | Cloudflare Turnstile         |
+| Observabilité          | Prometheus                   |
+| Stockage des secrets   | Google Secret Manager        |
+
+---
+
+## Architecture technique
+
+La plateforme repose sur une architecture Next.js full-stack. Le frontend communique avec les routes API internes, qui délèguent les opérations aux différents contrôleurs et services métier.
+
+### Architecture applicative
+
 ```
-
-Avec Docker :
-
-```bash
-cp .env.example .env
-docker compose up --build        # http://127.0.0.1:3000
+┌──────────────────────────────────────┐
+│           React / Next.js            │
+│              Interface UI            │
+├──────────────────────────────────────┤
+│                                      │
+│  Requêtes HTTP                       │
+│  Tests de charge                     │
+│  Dimensionnement                     │
+│  Rapports                            │
+│                                      │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────┐
+│            API Routes Next.js         │
+├──────────────────────────────────────┤
+│                                      │
+│  Requests Controller                 │
+│  Load Tests Controller               │
+│  Advisor Controller                  │
+│  Infrastructure Controller           │
+│  Reports Controller                  │
+│                                      │
+└──────────────────┬───────────────────┘
+                   │
+                   ▼
+┌──────────────────────────────────────┐
+│              Couche métier           │
+├──────────────────────────────────────┤
+│                                      │
+│  Client HTTP sécurisé                │
+│  Workflow Engine                     │
+│  Load Test Engine                    │
+│  Scalability Advisor                 │
+│  Rate Limiting                       │
+│  Bot Protection                      │
+│                                      │
+└──────────────────┬───────────────────┘
+                   │
+          ┌────────┴────────┐
+          │                 │
+          ▼                 ▼
+┌──────────────────┐ ┌──────────────────┐
+│   Load Workers   │ │    Prometheus    │
+│     Node.js      │ │    Metrics API   │
+└──────────────────┘ └──────────────────┘
+          │
+          ▼
+┌──────────────────────────────────────┐
+│           Google Cloud Run           │
+│                                      │
+│          Docker Container            │
+│          Next.js + Workers            │
+└──────────────────────────────────────┘
 ```
-
-## Configuration (variables d'environnement)
-
-| Variable | Défaut | Rôle |
-|---|---|---|
-| `DEPLOYMENT_MODE` | `public` | `public` : inconnus autorisés, réseaux privés interdits en production. `private` : personnes de confiance. |
-| `ALLOW_PRIVATE_NETWORKS` | `false` | Autorise les cibles en réseau privé (interdit en production en mode `public`). |
-| `HTTP_*` | 30 s, 5 Mio, 5 redirections | Limites du client HTTP. |
-| `WORKFLOW_MAX_STEPS` | 50 | Étapes maximum par workflow. |
-| `LOAD_MAX_VUS` / `LOAD_MAX_DURATION_SECONDS` / `LOAD_MAX_RPS` | 100 / 120 / 500 | Plafonds d'un test de charge. |
-| `LOAD_MAX_CONCURRENT_RUNS` | 1 | Tests de charge simultanés. |
-| `RATE_LIMIT_*` | 120 req / 60 s, 10 tests/h | Limitation de débit par IP. |
-| `TRUSTED_PROXY_HOPS` | 1 | Nombre de proxys de confiance devant l'application (lecture de `X-Forwarded-For`). |
-| `PROMETHEUS_ALLOWED_HOSTS` | vide | Hôtes privés autorisés **uniquement** pour la connexion Prometheus. |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error`. |
-
-Liste complète : `.env.example`.
-
-## API
-
-| Méthode | Route | Rôle |
-|---|---|---|
-| POST | `/api/requests/execute` | Exécute une requête HTTP |
-| POST | `/api/workflows/run` | Exécute un workflow (assertions, extractions) |
-| POST | `/api/load-tests/run` | Lance un test de charge (flux SSE) |
-| GET | `/api/load-tests/{id}` | État d'un test |
-| GET | `/api/load-tests/{id}/events` | Rattache un flux SSE à un test |
-| POST | `/api/load-tests/{id}/cancel` | Annule un test |
-| POST | `/api/advisor/analyze` | Analyse d'un test (Scalability Advisor) |
-| POST | `/api/advisor/capacity` | Planification de capacité |
-| POST | `/api/infrastructure/check` · `/query` | Vérifie / interroge Prometheus |
-| POST | `/api/import` | Import Postman v2.x ou OpenAPI 3.0/3.1 |
-| POST | `/api/reports/export` | Rapport HTML ou JSON |
-| GET | `/api/config` · `/api/health` | Limites publiques · santé |
-
-## Sécurité
-
-Voir [docs/security.md](docs/security.md) et [SECURITY.md](SECURITY.md). Points clés : protection SSRF avec
-résolution DNS épinglée, limites strictes, aucun code utilisateur exécuté côté serveur, workers isolés,
-rapports avec CSP stricte et secrets masqués.
-
-## Déploiement
-
-Docker, Docker Compose et Google Cloud Run : [docs/deploy-cloud-run.md](docs/deploy-cloud-run.md).
-
-## Performances
-
-Les expressions régulières écrites par l'utilisateur (extracteurs `regex`, assertions `matches`) s'exécutent dans un
-bac à sable avec délai maximum de 50 ms, pour qu'un motif catastrophique ne bloque pas le serveur. Cette protection
-coûte environ 0,12 ms par appel (mesuré sous Windows et sous Linux dans Docker). En test de charge, préfère les
-assertions `status`, `responseTime`, `jsonPath` et `bodyContains`, qui n'ont pas ce coût.
