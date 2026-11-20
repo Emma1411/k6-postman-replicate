@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Construire l'image
         run: docker build -t api-eng-platform:ci --build-arg APP_VERSION=${{ github.sha }} .
       - name: Démarrer et vérifier la santé
@@ -54,7 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true   # informatif : un avis sur une dépendance ne doit pas bloquer une PR
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
