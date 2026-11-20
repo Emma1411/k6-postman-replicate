@@ -52,7 +52,7 @@
     "fake-indexeddb": "^6.2.8",
     "tailwindcss": "^4.3.3",
     "tsup": "^9.0.0",
-    "typescript": "^5",
+    "typescript": "^7",
     "vite": "^6.4.6",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.7"
