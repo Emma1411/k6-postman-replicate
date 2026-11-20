@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ArrowRight, Cpu, RotateCw, ShieldCheck, Terminal } from "lucide-react";
 import { setChallengeHandler } from "@/client/api/client";
 import { verifyBot } from "@/client/api/endpoints";
@@ -30,7 +36,9 @@ interface Pending {
  */
 export function ChallengeProvider({ children }: { children: ReactNode }) {
   const siteKey = useAppSelector((s) =>
-    s.config.status === "ready" ? (s.config.value.features.botProtection?.siteKey ?? null) : null,
+    s.config.status === "ready"
+      ? (s.config.value.features.botProtection?.siteKey ?? null)
+      : null,
   );
   const siteKeyRef = useRef(siteKey);
   useEffect(() => {
@@ -65,13 +73,13 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
   );
 
   useEffect(() => {
-  console.log("[challenge] handler enregistré");
-  setChallengeHandler(requestChallenge);
-  return () => {
-    console.log("[challenge] handler retiré");
-    setChallengeHandler(null);
-  };
-}, [requestChallenge]);
+    console.log("[challenge] handler enregistré");
+    setChallengeHandler(requestChallenge);
+    return () => {
+      console.log("[challenge] handler retiré");
+      setChallengeHandler(null);
+    };
+  }, [requestChallenge]);
 
   useEffect(() => {
     setChallengeHandler(requestChallenge);
@@ -86,7 +94,11 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
       pending.current = null;
       setOpen(false);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "La vérification a échoué. Réessaie.");
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "La vérification a échoué. Réessaie.",
+      );
       setAttempt((n) => n + 1); // nouveau widget
     } finally {
       setVerifying(false);
@@ -101,7 +113,9 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const close = useCallback(() => {
-    pending.current?.reject(new ApiError("CHALLENGE_REQUIRED", "Vérification annulée.", 403));
+    pending.current?.reject(
+      new ApiError("CHALLENGE_REQUIRED", "Vérification annulée.", 403),
+    );
     pending.current = null;
     setOpen(false);
   }, []);
@@ -117,18 +131,31 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
             </div>
             <div className="space-y-1">
               <DialogTitle>Contrôle anti-robot</DialogTitle>
-              <DialogDescription>Vérification d'accès au service public</DialogDescription>
+              <DialogDescription>
+                Vérification d’accès au service public
+              </DialogDescription>
             </div>
           </DialogHeader>
 
           <p className="text-sm leading-relaxed text-muted-foreground">
-            Pour protéger le banc de test partagé contre les surcharges automatisées et garantir des créneaux
-            d'exécution équitables pour chaque développeur.
+            Pour protéger le banc de test partagé contre les surcharges
+            automatisées et garantir des créneaux d’exécution équitables pour
+            chaque développeur.
           </p>
 
           <div className="rounded-xl border bg-muted/30 p-4">
-            {siteKey && <Turnstile key={attempt} siteKey={siteKey} onToken={onToken} onError={onWidgetError} />}
-            <p className="mt-3 min-h-5 text-xs text-muted-foreground" aria-live="polite">
+            {siteKey && (
+              <Turnstile
+                key={attempt}
+                siteKey={siteKey}
+                onToken={onToken}
+                onError={onWidgetError}
+              />
+            )}
+            <p
+              className="mt-3 min-h-5 text-xs text-muted-foreground"
+              aria-live="polite"
+            >
               {verifying
                 ? "Vérification en cours…"
                 : "Un cookie technique de courte durée est posé après la vérification."}
@@ -142,12 +169,14 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
 
           <div className="rounded-xl bg-muted/20 p-4">
             <div className="mb-1 flex items-center gap-2 text-sm font-medium">
-              <Cpu className="size-4 text-primary" aria-hidden /> Pourquoi ce contrôle ?
+              <Cpu className="size-4 text-primary" aria-hidden /> Pourquoi ce
+              contrôle ?
             </div>
             <p className="text-sm leading-relaxed text-muted-foreground">
-              Chaque test de charge mobilise des threads CPU sur notre générateur. Ce filtre stoppe l'automatisation
-              abusive sans toucher à tes données : tes scénarios, clés d'API et payloads restent dans ton navigateur
-              (IndexedDB).
+              Chaque test de charge mobilise des threads CPU sur notre
+              générateur. Ce filtre stoppe l’automatisation abusive sans toucher
+              à tes données : tes scénarios, clés d’API et payloads restent dans
+              ton navigateur (IndexedDB).
             </p>
             {SELF_HOST_URL && (
               <a
@@ -157,10 +186,12 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
                 className="mt-3 flex items-center justify-between rounded-md bg-background/60 px-3 py-2 text-sm text-muted-foreground hover:text-foreground"
               >
                 <span className="flex items-center gap-2">
-                  <Terminal className="size-4" aria-hidden /> Besoin de bypass complet ?
+                  <Terminal className="size-4" aria-hidden /> Besoin de bypass
+                  complet ?
                 </span>
                 <span className="flex items-center gap-1 font-medium text-foreground">
-                  Déployer en Docker autonome <ArrowRight className="size-4" aria-hidden />
+                  Déployer en Docker autonome{" "}
+                  <ArrowRight className="size-4" aria-hidden />
                 </span>
               </a>
             )}
@@ -173,8 +204,13 @@ export function ChallengeProvider({ children }: { children: ReactNode }) {
           </div>
 
           <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
-            <button type="button" onClick={reload} className="flex items-center gap-1.5 hover:text-foreground">
-              <RotateCw className="size-3.5" aria-hidden /> Widget bloqué ? Recharger le défi
+            <button
+              type="button"
+              onClick={reload}
+              className="flex items-center gap-1.5 hover:text-foreground"
+            >
+              <RotateCw className="size-3.5" aria-hidden /> Widget bloqué ?
+              Recharger le défi
             </button>
             <span>Touche Échap pour fermer</span>
           </div>
