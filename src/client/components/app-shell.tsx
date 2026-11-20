@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -9,9 +8,12 @@ import { cn } from "@/client/lib/utils";
 import { GlossarySheet } from "./glossary-sheet";
 import { InstanceBadge } from "./instance-badge";
 import { NAV_ITEMS } from "./nav-items";
+import Image from "next/image";
 
 const isActive = (pathname: string, href: string) =>
-  href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  href === "/"
+    ? pathname === "/"
+    : pathname === href || pathname.startsWith(`${href}/`);
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -22,21 +24,25 @@ export function AppShell({ children }: { children: ReactNode }) {
         href="#contenu"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-3 focus:py-2 focus:text-primary-foreground"
       >
-        Aller au contenu
+        Aller au contenu 
       </a>
 
       <header className="sticky top-0 z-40 border-b border-border bg-background">
         <div className="mx-auto grid  grid-cols-1 items-center gap-2 px-4 py-2 md:h-14 md:grid-cols-[1fr_auto_1fr] md:py-0">
-
           {/* Logo à gauche */}
           <Link
             href="/"
-            className="flex items-center gap-2 justify-self-start rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex items-center gap-3 justify-self-start rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Activity className="size-4" aria-hidden />
-            </span>
-            <span className="text-sm font-semibold">API Engineering</span>
+            <Image
+              src="/logopulse.png"
+              alt="Logo Pulse"
+              width={56}
+              height={56}
+              className="h-14 w-14 object-contain"
+              priority
+            />
+            <span className="text-base font-bold">API Engineering</span>
           </Link>
 
           {/* Navigation centrée */}
@@ -73,7 +79,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <InstanceBadge />
             <GlossarySheet />
           </div>
-
         </div>
       </header>
 

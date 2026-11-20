@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { ComingSoon } from "@/client/components/coming-soon";
+import { Suspense } from "react";
+import { SizingWorkspace } from "@/client/features/sizing/components/sizing-workspace";
 
 export const metadata: Metadata = { title: "Dimensionnement" };
 
 export default function Page() {
+  // useSearchParams (le test choisi dans l'adresse) exige une frontière Suspense.
   return (
-    <ComingSoon
-      title="Dimensionnement"
-      step="9.4"
-      description="Le diagnostic d'un test, la planification de capacité et la connexion à Prometheus."
-    />
+    <Suspense fallback={null}>
+      <SizingWorkspace />
+    </Suspense>
   );
 }

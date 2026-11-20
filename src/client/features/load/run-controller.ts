@@ -67,7 +67,15 @@ async function recordRun(deps: ControllerDeps, info: LoadRunInfo): Promise<void>
 async function finalize(deps: ControllerDeps, result: LoadRunResult): Promise<void> {
   const { scenario, points } = deps.getState().load;
   try {
-    await saveResult({ id: result.runId, savedAt: Date.now(), name: result.name, scenario, result, points });
+    await saveResult({
+      id: result.runId,
+      savedAt: Date.now(),
+      startedAt: deps.getState().load.run?.startedAt ?? null,
+      name: result.name,
+      scenario,
+      result,
+      points,
+    });
     await deleteRun(result.runId);
   } catch {
     /* le résultat reste affiché mais ne sera pas dans « Tests précédents » */

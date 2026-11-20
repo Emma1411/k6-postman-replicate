@@ -1,8 +1,7 @@
-
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { StoreProvider } from "@/client/store/store-provider";
+import { AppProviders } from "@/client/components/app-providers";
 import { AppShell } from "@/client/components/app-shell";
 
 const geistSans = Geist({
@@ -16,9 +15,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "API Engineering Platform",
-  description: "API Engineering Platform",
-};
+  title: {
+    default: "API Engineering Platform",
+    template: "%s · API Engineering",
+  },
+  description:
+    "Teste tes API, mesure leur performance et découvre si ton infrastructure tiendra la charge. Gratuit, sans compte.",
+}; 
 
 export default function RootLayout({
   children,
@@ -31,11 +34,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <StoreProvider>
-          <AppShell>
-            {children}
-          </AppShell>
-        </StoreProvider>
+        <AppProviders>
+          <AppShell>{children}</AppShell>
+        </AppProviders>
       </body>
     </html>
   );

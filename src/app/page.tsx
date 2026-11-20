@@ -4,6 +4,7 @@ import { Button } from "@/client/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/client/components/ui/card";
 import { DevDiagnostics } from "@/client/components/dev-diagnostics";
 import { InstanceLimits } from "@/client/components/instance-limits";
+import { redirect } from "next/navigation";
 
 const PATHS = [
   {
@@ -36,42 +37,5 @@ const PATHS = [
 ] as const;
 
 export default function HomePage() {
-  return (
-    <div className="mx-auto max-w-5xl space-y-12">
-      <header className="space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Que veux-tu faire ?</h1>
-        <p className="max-w-2xl text-muted-foreground">
-          Teste tes API, mesure leur performance et découvre si ton infrastructure tiendra la charge. Gratuit, sans
-          compte : tes collections et tes réglages sont enregistrés dans ton navigateur, pas sur le serveur.
-        </p>
-      </header>
-
-      <section aria-labelledby="chemins" className="grid gap-4 md:grid-cols-3">
-        <h2 id="chemins" className="sr-only">
-          Par où commencer hhhhhhhhhhhhhhhhhhhhhhhhhh
-        </h2>
-        {PATHS.map(({ href, icon: Icon, title, description, when, cta }) => (
-          <Card key={href} className="flex flex-col">
-            <CardHeader>
-              <Icon className="mb-2 size-6 text-primary" aria-hidden />
-              <CardTitle>{title}</CardTitle>
-              <CardDescription>{when}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 text-sm text-muted-foreground">{description}</CardContent>
-            <CardFooter>
-              <Button asChild>
-                <Link href={href}>{cta}</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </section>
-
-      <section aria-label="Limites de l'instance">
-        <InstanceLimits />
-      </section>
-
-      {process.env.NODE_ENV !== "production" && <DevDiagnostics />}
-    </div>
-  );
+ redirect("/requests");
 }

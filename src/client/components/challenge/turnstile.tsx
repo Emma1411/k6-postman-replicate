@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -5,6 +6,8 @@ import { useEffect, useRef } from "react";
 interface TurnstileParams {
   sitekey: string;
   theme?: "light" | "dark" | "auto";
+  size?: "normal" | "compact" | "flexible";
+  language?: string;
   callback: (token: string) => void;
   "error-callback"?: (code?: string) => void;
   "expired-callback"?: () => void;
@@ -19,22 +22,33 @@ declare global {
   }
 }
 
-const SCRIPT_SRC = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+const SCRIPT_SRC =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+
 let scriptPromise: Promise<void> | null = null;
 
 function loadScript(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
+
   scriptPromise ??= new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = SCRIPT_SRC;
     script.async = true;
+
     script.onload = () => resolve();
+
     script.onerror = () => {
       scriptPromise = null;
-      reject(new Error("Le contrôle de sécurité n'a pas pu être chargé. Vérifie ta connexion."));
+      reject(
+        new Error(
+          "Le contrôle de sécurité n'a pas pu être chargé. Vérifie ta connexion.",
+        ),
+      );
     };
+
     document.head.appendChild(script);
   });
+
   return scriptPromise;
 }
 
@@ -55,21 +69,28 @@ export function Turnstile({ siteKey, onToken, onError }: Props) {
     loadScript()
       .then(() => {
         if (cancelled || !container.current || !window.turnstile) return;
+
         widgetId = window.turnstile.render(container.current, {
           sitekey: siteKey,
           theme: "dark",
+          size: "flexible",
+          language: "fr",
           callback: onToken,
-          "error-callback": () => onError("Le contrôle a rencontré une erreur. Réessaie."),
-          "expired-callback": () => onError("Le contrôle a expiré. Recommence."),
+          "error-callback": () =>
+            onError("Le contrôle a rencontré une erreur. Réessaie."),
+          "expired-callback": () =>
+            onError("Le contrôle a expiré. Recommence."),
         });
       })
       .catch((err: Error) => onError(err.message));
 
     return () => {
       cancelled = true;
-      if (widgetId && window.turnstile) window.turnstile.remove(widgetId);
+      if (widgetId && window.turnstile) {
+        window.turnstile.remove(widgetId);
+      }
     };
   }, [siteKey, onToken, onError]);
 
-  return <div ref={container} />;
+  return <div ref={container} className="w-full" />;
 }

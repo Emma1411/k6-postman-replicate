@@ -36,15 +36,24 @@ export interface StoredLoadResult {
   scenario: LoadScenario | null;
   result: LoadRunResult;
   points: WindowPoint[];
+  startedAt?: number | null;
 }
 
 interface WorkspaceDB extends DBSchema {
   collections: { key: string; value: Collection };
   environments: { key: string; value: Environment };
-  history: { key: string; value: HistoryEntry; indexes: { "by-created": number } };
+  history: {
+    key: string;
+    value: HistoryEntry;
+    indexes: { "by-created": number };
+  };
   settings: { key: string; value: SettingRecord };
   runs: { key: string; value: RunRecord; indexes: { "by-started": number } };
-  results: { key: string; value: StoredLoadResult; indexes: { "by-saved": number } };
+  results: {
+    key: string;
+    value: StoredLoadResult;
+    indexes: { "by-saved": number };
+  };
 }
 
 export type Db = IDBPDatabase<WorkspaceDB>;
@@ -65,12 +74,21 @@ export function getDb(): Promise<Db> {
       if (oldVersion < 1) {
         db.createObjectStore("collections", { keyPath: "id" });
         db.createObjectStore("environments", { keyPath: "id" });
-        db.createObjectStore("history", { keyPath: "id" }).createIndex("by-created", "createdAt");
+        db.createObjectStore("history", { keyPath: "id" }).createIndex(
+          "by-created",
+          "createdAt",
+        );
         db.createObjectStore("settings", { keyPath: "key" });
-        db.createObjectStore("runs", { keyPath: "runId" }).createIndex("by-started", "startedAt");
+        db.createObjectStore("runs", { keyPath: "runId" }).createIndex(
+          "by-started",
+          "startedAt",
+        );
       }
       if (oldVersion < 2) {
-        db.createObjectStore("results", { keyPath: "id" }).createIndex("by-saved", "savedAt");
+        db.createObjectStore("results", { keyPath: "id" }).createIndex(
+          "by-saved",
+          "savedAt",
+        );
       }
     },
     terminated() {
